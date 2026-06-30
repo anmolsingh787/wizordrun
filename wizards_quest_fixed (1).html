@@ -1,0 +1,3973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Wizard's Quest: Fixed</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;touch-action:none;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;background:#0a0a12;font-family:'Trebuchet MS','Lucida Sans',sans-serif;position:fixed}
+body{display:flex;justify-content:center;align-items:center}
+#gameContainer{position:relative;width:100%;height:100%;overflow:hidden;background:#0a0a12;max-width:100vw;max-height:100vh}
+#gameCanvas{display:block;width:100%;height:100%;image-rendering:crisp-edges}
+
+/* MENU BAR */
+#menuBar{position:absolute;top:0;left:0;width:100%;height:40px;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(180deg,rgba(15,10,30,0.97),rgba(10,5,20,0.95));border-bottom:1px solid rgba(200,160,60,0.4);z-index:30;padding:0 12px;backdrop-filter:blur(8px);overflow:hidden}
+.menu-logo{font-size:14px;font-weight:700;color:#ffe066;letter-spacing:0.5px;display:flex;align-items:center;gap:6px;white-space:nowrap;flex-shrink:1;overflow:hidden;min-width:0}
+.menu-logo span{font-size:18px;flex-shrink:0}
+.menu-nav{display:flex;gap:6px;flex-shrink:0}
+.menu-btn{padding:5px 12px;font-size:11px;font-weight:600;background:rgba(80,50,120,0.4);color:#e8e0f0;border:1px solid rgba(120,80,180,0.4);border-radius:6px;cursor:pointer;transition:all 0.15s ease;white-space:nowrap;flex-shrink:0}
+.menu-btn:hover{background:rgba(120,80,180,0.6);border-color:rgba(200,160,60,0.6);color:#fff}
+.menu-btn.active{background:rgba(120,80,180,0.8);border-color:#ffe066;color:#ffe066}
+.menu-stats{display:flex;gap:10px;align-items:center;flex-shrink:0;overflow:hidden}
+.menu-stat{display:flex;align-items:center;gap:3px;font-size:11px;font-weight:600;color:#c8c0d8;white-space:nowrap}
+.menu-stat span{font-size:13px}
+.menu-stat .val{color:#ffe066;font-weight:700}
+
+/* HUD */
+#ui{position:absolute;top:40px;left:0;width:100%;padding:6px 12px;display:flex;justify-content:space-between;align-items:center;color:white;font-size:12px;font-weight:600;pointer-events:none;z-index:10;background:linear-gradient(180deg,rgba(10,5,20,0.7),transparent);overflow:hidden;flex-wrap:nowrap}
+.ui-item{display:flex;align-items:center;gap:4px;padding:3px 10px;background:rgba(20,10,40,0.6);border-radius:14px;border:1px solid rgba(100,70,150,0.3);font-size:11px;flex-shrink:0}
+.ui-icon{font-size:14px}
+.ui-value{color:#ffe066;font-size:13px;font-weight:700}
+#levelIndicator{position:absolute;top:72px;left:50%;transform:translateX(-50%);color:#fff;font-size:11px;font-weight:600;letter-spacing:0.5px;background:rgba(60,30,100,0.8);padding:4px 14px;border-radius:12px;border:1px solid rgba(200,160,60,0.4);pointer-events:none;z-index:10;white-space:nowrap}
+#controls{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.6);text-align:center;font-size:10px;letter-spacing:0.3px;background:rgba(0,0,0,0.4);padding:5px 12px;border-radius:8px;pointer-events:none;z-index:10;white-space:nowrap}
+#debugPanel{position:absolute;top:74px;right:8px;background:rgba(0,0,0,0.85);color:#4eff4e;font-family:'Courier New',monospace;font-size:9px;padding:6px 8px;border-radius:4px;border:1px solid rgba(78,255,78,0.3);display:none;z-index:15;pointer-events:none;max-width:130px;line-height:1.4}
+
+/* PROGRESS BAR */
+#progressBar{position:absolute;bottom:44px;left:50%;transform:translateX(-50%);width:180px;height:6px;background:rgba(20,10,40,0.6);border:none;border-radius:3px;overflow:hidden;pointer-events:none;z-index:10;box-shadow:inset 0 1px 3px rgba(0,0,0,0.4)}
+#progressFill{height:100%;width:0%;background:linear-gradient(90deg,#7c3aed,#f59e0b);transition:width 0.3s;border-radius:3px}
+
+/* MOBILE CONTROLS */
+#mobileControls{position:absolute;bottom:50px;left:0;width:100%;height:130px;z-index:12;display:none}
+.mobile-btn{position:absolute;width:56px;height:56px;background:rgba(255,255,255,0.08);border:2px solid rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.7);font-size:22px;user-select:none;cursor:pointer;transition:all 0.1s}
+.mobile-btn:active{background:rgba(120,80,200,0.4);border-color:rgba(200,160,60,0.6);transform:scale(0.92)}
+#btnLeft{left:20px;bottom:10px}
+#btnRight{left:90px;bottom:10px}
+#btnJump{right:20px;bottom:10px}
+#btnAction{right:20px;bottom:80px}
+
+/* TITLE SCREEN */
+#startScreen{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:20;transition:opacity 0.4s ease}
+#startScreen.hidden{opacity:0;pointer-events:none}
+#titleCanvas{position:absolute;top:0;left:0;width:100%;height:100%}
+.start-buttons{position:absolute;bottom:10%;left:50%;transform:translateX(-50%);display:flex;gap:12px;z-index:25;flex-wrap:wrap;justify-content:center}
+.start-btn-main{padding:14px 40px;font-size:15px;font-weight:700;letter-spacing:1.5px;background:linear-gradient(180deg,#d4a817,#8b6914,#b8930f);color:#fff8dc;border:2px solid #ffd700;border-radius:8px;cursor:pointer;box-shadow:0 0 25px rgba(200,160,20,0.4),inset 0 1px 0 rgba(255,255,255,0.3),0 4px 0 #6b4f0a;transition:all 0.15s ease;white-space:nowrap;text-shadow:0 1px 3px rgba(0,0,0,0.6);animation:startFloat 3s ease-in-out infinite}
+.start-btn-sec{padding:11px 28px;font-size:12px;font-weight:600;letter-spacing:0.8px;background:linear-gradient(180deg,rgba(40,50,60,0.9),rgba(20,30,40,0.95));color:#c8dce8;border:1px solid rgba(160,140,80,0.5);border-radius:8px;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.1);transition:all 0.15s ease;white-space:nowrap;text-shadow:0 1px 2px rgba(0,0,0,0.5)}
+@keyframes startFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+.start-btn-main:hover{background:linear-gradient(180deg,#ecd020,#b88a18,#d4a817);box-shadow:0 0 35px rgba(200,160,20,0.6),inset 0 1px 0 rgba(255,255,255,0.4),0 4px 0 #6b4f0a}
+.start-btn-main:active{transform:translateY(3px);box-shadow:0 0 10px rgba(200,160,20,0.3),0 1px 0 #6b4f0a}
+.start-btn-sec:hover{border-color:#ffe066;color:#ffe066;box-shadow:0 3px 15px rgba(200,160,60,0.2)}
+.start-btn-sec:active{transform:translateY(2px)}
+
+/* LEVEL SELECT - PREMIUM FANTASY */
+#levelSelectScreen{position:absolute;top:0;left:0;width:100%;height:100%;display:none;flex-direction:column;align-items:center;z-index:20;overflow:hidden}
+#levelSelectBg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}
+.ls-header{position:relative;z-index:2;text-align:center;padding:8px 0 2px;width:100%}
+.ls-title{color:#ffe066;font-size:22px;font-weight:700;letter-spacing:1.5px;text-shadow:0 2px 8px rgba(0,0,0,0.7),0 0 20px rgba(200,160,60,0.2)}
+.ls-subtitle{color:rgba(180,200,220,0.7);font-size:11px;margin-top:2px;letter-spacing:0.5px}
+.ls-world-tabs{position:relative;z-index:2;display:flex;gap:4px;width:100%;overflow-x:auto;padding:6px 12px 0;scrollbar-width:none}
+.ls-world-tabs::-webkit-scrollbar{display:none}
+.ls-world-tab{flex-shrink:0;padding:7px 14px;font-size:10px;font-weight:600;color:rgba(180,170,160,0.7);background:linear-gradient(180deg,rgba(30,25,40,0.8),rgba(20,15,30,0.9));border:1px solid rgba(80,60,100,0.3);border-bottom:none;border-radius:8px 8px 0 0;cursor:pointer;transition:all 0.2s;white-space:nowrap;letter-spacing:0.3px}
+.ls-world-tab:hover{color:#e8d8a0;background:linear-gradient(180deg,rgba(50,35,60,0.8),rgba(30,20,45,0.9));border-color:rgba(120,90,150,0.4)}
+.ls-world-tab.active{color:#ffe066;background:linear-gradient(180deg,rgba(60,40,20,0.9),rgba(40,25,10,0.95));border-color:rgba(200,160,60,0.6);box-shadow:0 -2px 10px rgba(200,160,60,0.15),inset 0 1px 0 rgba(255,220,100,0.1)}
+.ls-map-area{position:relative;z-index:2;flex:1;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 20px;overflow-y:auto}
+.ls-world-badge{display:flex;align-items:center;gap:10px;padding:12px 24px;margin-bottom:16px;background:linear-gradient(135deg,rgba(20,30,50,0.8),rgba(10,15,30,0.9));border:1px solid rgba(100,140,200,0.3);border-radius:12px;width:auto;min-width:300px;max-width:90%;box-shadow:0 4px 20px rgba(0,0,0,0.4),inset 0 1px 0 rgba(100,180,255,0.08)}
+.ls-world-badge-icon{font-size:28px;filter:drop-shadow(0 0 6px rgba(200,160,60,0.5))}
+.ls-world-badge-text{color:#fff;font-size:16px;font-weight:700;letter-spacing:0.5px}
+.ls-world-badge-sub{color:rgba(150,180,220,0.6);font-size:11px;margin-left:auto;font-weight:500}
+.ls-path{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;max-width:680px;width:100%;padding:0}
+.ls-node{display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:all 0.2s ease}
+.ls-node:hover{transform:translateY(-5px) scale(1.03)}
+.ls-node-box{width:80px;height:80px;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px solid rgba(80,120,180,0.4);background:linear-gradient(160deg,rgba(20,35,55,0.85),rgba(10,20,35,0.95));box-shadow:0 5px 15px rgba(0,0,0,0.5),inset 0 1px 0 rgba(100,180,255,0.06);transition:all 0.2s;position:relative;overflow:hidden}
+.ls-node-box::before{content:'';position:absolute;top:0;left:0;right:0;height:40%;background:linear-gradient(180deg,rgba(100,160,220,0.08),transparent);border-radius:12px 12px 0 0;pointer-events:none}
+.ls-node:hover .ls-node-box{border-color:rgba(200,160,60,0.7);box-shadow:0 5px 25px rgba(80,120,200,0.3),inset 0 1px 0 rgba(100,180,255,0.1)}
+.ls-node.unlocked .ls-node-box{border-color:rgba(80,180,100,0.5);background:linear-gradient(160deg,rgba(15,40,25,0.9),rgba(8,25,15,0.95))}
+.ls-node.unlocked .ls-node-box::before{background:linear-gradient(180deg,rgba(80,200,100,0.06),transparent)}
+.ls-node.unlocked:hover .ls-node-box{border-color:rgba(120,220,100,0.7);box-shadow:0 5px 25px rgba(80,200,100,0.2)}
+.ls-node.current .ls-node-box{border-color:#ffe066;background:linear-gradient(160deg,rgba(40,25,60,0.9),rgba(25,12,40,0.95));box-shadow:0 0 25px rgba(200,160,60,0.3),0 5px 15px rgba(0,0,0,0.4);animation:currentGlow 2s ease-in-out infinite}
+.ls-node.current .ls-node-box::before{background:linear-gradient(180deg,rgba(200,160,60,0.1),transparent)}
+@keyframes currentGlow{0%,100%{box-shadow:0 0 15px rgba(200,160,60,0.2),0 5px 15px rgba(0,0,0,0.4)}50%{box-shadow:0 0 30px rgba(200,160,60,0.4),0 5px 15px rgba(0,0,0,0.4)}}
+.ls-node.locked .ls-node-box{background:linear-gradient(160deg,rgba(20,18,16,0.9),rgba(12,10,8,0.95));border-color:rgba(50,45,40,0.3);cursor:not-allowed;opacity:0.5}
+.ls-node.locked:hover{transform:none}
+.ls-node.locked:hover .ls-node-box{border-color:rgba(50,45,40,0.3);box-shadow:0 5px 15px rgba(0,0,0,0.5)}
+.ls-node-num{font-size:24px;font-weight:700;color:#fff;text-shadow:0 2px 4px rgba(0,0,0,0.5)}
+.ls-node.locked .ls-node-num{display:none}
+.ls-node-lock{font-size:18px;opacity:0.5}
+.ls-node-stars{font-size:11px;margin-top:2px;color:#ffe066;text-shadow:0 0 6px rgba(200,160,60,0.5)}
+.ls-node-name{font-size:9px;color:rgba(160,180,210,0.7);margin-top:6px;text-align:center;max-width:90px;font-weight:500}
+.ls-node.current .ls-node-name{color:#ffe066}
+.ls-node.unlocked .ls-node-name{color:rgba(130,210,140,0.8)}
+
+/* LEVEL COMPLETE */
+#levelCompleteScreen{position:absolute;top:0;left:0;width:100%;height:100%;display:none;flex-direction:column;justify-content:center;align-items:center;background:rgba(8,5,15,0.95);z-index:20;padding:16px}
+#levelCompleteScreen h1{color:#5cb85c;font-size:22px;font-weight:700;letter-spacing:0.5px;margin-bottom:8px;text-align:center}
+.star-rating{font-size:32px;margin:8px 0}
+.stats-panel{background:rgba(40,20,80,0.5);border:1px solid rgba(120,80,200,0.3);border-radius:10px;padding:14px 24px;margin-bottom:12px;text-align:center;width:90%;max-width:280px}
+.stats-panel p{color:#c8c0d8;font-size:13px;margin:8px 0;font-weight:500}
+.stats-panel span{color:#ffe066;font-weight:700}
+
+/* PAUSE MENU */
+#pauseMenu{position:absolute;top:0;left:0;width:100%;height:100%;display:none;flex-direction:column;justify-content:center;align-items:center;background:rgba(8,5,15,0.9);z-index:20;backdrop-filter:blur(4px)}
+#pauseMenu h2{color:#ffe066;font-size:22px;font-weight:700;margin-bottom:20px}
+.menu-btn2{padding:11px 30px;font-size:14px;font-weight:600;background:linear-gradient(180deg,rgba(80,40,140,0.7),rgba(50,25,90,0.9));color:#e8e0f0;border:1px solid rgba(120,80,200,0.4);border-radius:8px;cursor:pointer;margin:6px;transition:all 0.15s ease;min-width:150px;text-align:center}
+.menu-btn2:hover{background:linear-gradient(180deg,rgba(100,60,170,0.8),rgba(70,35,120,0.9));border-color:#ffe066;color:#fff;transform:translateY(-1px);box-shadow:0 4px 15px rgba(80,40,140,0.3)}
+
+/* GAME OVER */
+#gameOverScreen{position:absolute;top:0;left:0;width:100%;height:100%;display:none;flex-direction:column;justify-content:center;align-items:center;background:rgba(10,2,2,0.96);z-index:20;padding:16px}
+#gameOverScreen h1{color:#e05050;font-size:26px;font-weight:700;margin-bottom:12px;text-align:center}
+
+/* SETTINGS PANEL */
+#settingsPanel{position:absolute;top:0;right:-320px;width:300px;height:100%;background:linear-gradient(180deg,rgba(15,10,30,0.98),rgba(10,5,20,0.98));border-left:1px solid rgba(120,80,200,0.3);z-index:25;transition:right 0.3s ease;padding:20px;overflow-y:auto;backdrop-filter:blur(10px)}
+#settingsPanel.open{right:0}
+.settings-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid rgba(120,80,200,0.2)}
+.settings-header h3{color:#ffe066;font-size:16px;font-weight:700;margin:0}
+.settings-close{background:none;border:none;color:#c8c0d8;font-size:20px;cursor:pointer;padding:4px 8px;border-radius:4px;transition:all 0.15s}
+.settings-close:hover{color:#fff;background:rgba(120,80,200,0.3)}
+.settings-section{margin-bottom:18px}
+.settings-section h4{color:#c8b0e0;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+.setting-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(60,40,100,0.2)}
+.setting-label{color:#c8c0d8;font-size:13px;font-weight:500}
+.setting-toggle{position:relative;width:40px;height:22px;background:rgba(60,40,100,0.5);border-radius:11px;cursor:pointer;transition:all 0.2s;border:1px solid rgba(120,80,200,0.3)}
+.setting-toggle.on{background:rgba(100,200,100,0.4);border-color:rgba(100,200,100,0.6)}
+.setting-toggle::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;background:#c8c0d8;border-radius:50%;transition:all 0.2s}
+.setting-toggle.on::after{left:20px;background:#5cb85c}
+.setting-slider{width:100%;margin-top:6px}
+.setting-slider input[type="range"]{width:100%;height:4px;-webkit-appearance:none;appearance:none;background:rgba(60,40,100,0.5);border-radius:2px;outline:none}
+.setting-slider input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;background:#7c3aed;border-radius:50%;cursor:pointer}
+.settings-keys{margin-top:8px}
+.key-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0}
+.key-action{color:#c8c0d8;font-size:12px}
+.key-bind{color:#ffe066;font-size:11px;font-weight:600;padding:2px 8px;background:rgba(60,40,100,0.4);border-radius:4px;border:1px solid rgba(120,80,200,0.3)}
+.settings-version{margin-top:20px;padding-top:12px;border-top:1px solid rgba(60,40,100,0.2);color:rgba(150,130,180,0.6);font-size:10px;text-align:center}
+
+/* HOW TO PLAY PANEL */
+#howToPlayPanel{position:absolute;top:0;left:-340px;width:320px;height:100%;background:linear-gradient(180deg,rgba(10,8,25,0.98),rgba(5,3,15,0.98));border-right:1px solid rgba(100,140,200,0.2);z-index:25;transition:left 0.3s ease;padding:0;overflow-y:auto;backdrop-filter:blur(10px)}
+#howToPlayPanel.open{left:0}
+.htp-header{display:flex;justify-content:space-between;align-items:center;padding:16px 18px;border-bottom:1px solid rgba(100,140,200,0.15);position:sticky;top:0;background:rgba(10,8,25,0.95);z-index:1}
+.htp-header h3{color:#87ceeb;font-size:15px;font-weight:700;margin:0}
+.htp-content{padding:12px 16px 24px}
+.htp-section{margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid rgba(60,80,120,0.15)}
+.htp-section:last-child{border-bottom:none}
+.htp-section h4{color:#ffe066;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px}
+.htp-grid{display:grid;grid-template-columns:1fr;gap:6px}
+.htp-item{display:flex;align-items:center;gap:10px;padding:5px 0}
+.htp-key{color:#ffe066;font-size:11px;font-weight:700;padding:3px 10px;background:rgba(40,30,70,0.6);border:1px solid rgba(100,80,160,0.3);border-radius:4px;min-width:60px;text-align:center;font-family:'Courier New',monospace}
+.htp-desc{color:#c8d0e0;font-size:12px;font-weight:500}
+.htp-list{padding:0}
+.htp-list p{color:#b8c8d8;font-size:11px;line-height:1.7;margin:0;padding:3px 0}
+
+@media(min-width:900px){
+#mobileControls{display:none!important}
+.menu-btn{padding:6px 14px;font-size:12px}
+.menu-logo{font-size:16px}
+.ls-path{grid-template-columns:repeat(5,1fr);max-width:750px;gap:20px}
+.ls-node-box{width:100px;height:100px;border-radius:16px}
+.ls-node-num{font-size:30px}
+.ls-node-name{font-size:11px;max-width:110px}
+.ls-node-stars{font-size:13px}
+.ls-title{font-size:26px}
+.ls-world-badge{min-width:400px;padding:14px 28px}
+.ls-world-badge-text{font-size:18px}
+.start-buttons{gap:16px}
+.start-btn-main{padding:16px 50px;font-size:17px}
+.start-btn-sec{padding:12px 32px;font-size:13px}
+#levelCompleteScreen h1{font-size:28px}
+#gameOverScreen h1{font-size:34px}
+.menu-btn2{padding:12px 36px;font-size:15px}
+#settingsPanel{width:320px}
+#howToPlayPanel{width:320px}
+}
+
+@media(min-width:600px) and (max-width:899px){
+#mobileControls{display:none!important}
+.menu-btn{padding:5px 10px;font-size:11px}
+.menu-logo{font-size:14px}
+.menu-stat{font-size:10px}
+.ls-path{grid-template-columns:repeat(5,1fr);max-width:550px;gap:14px}
+.ls-node-box{width:76px;height:76px;border-radius:12px}
+.ls-node-num{font-size:24px}
+.ls-node-name{font-size:10px;max-width:80px}
+.ls-title{font-size:22px}
+.ls-world-badge{min-width:300px;padding:10px 20px}
+.start-buttons{gap:12px}
+.start-btn-main{padding:14px 40px;font-size:15px}
+.start-btn-sec{padding:10px 24px;font-size:12px}
+#settingsPanel{width:300px}
+#howToPlayPanel{width:300px}
+}
+
+@media(max-width:599px){
+#mobileControls{display:block}
+#controls{display:none}
+/* Menu bar compact */
+#menuBar{height:36px;padding:0 6px}
+.menu-logo{font-size:11px;gap:3px}
+.menu-logo span{font-size:14px}
+.menu-nav{gap:3px}
+.menu-btn{padding:4px 7px;font-size:9px;border-radius:4px}
+.menu-stats{gap:5px}
+.menu-stat{font-size:9px}
+.menu-stat span{font-size:10px}
+/* HUD compact */
+#ui{top:36px;padding:3px 6px}
+.ui-item{padding:2px 6px;font-size:9px;border-radius:10px}
+.ui-icon{font-size:11px}
+.ui-value{font-size:11px}
+#levelIndicator{top:60px;font-size:9px;padding:3px 10px}
+/* Level select */
+#settingsPanel{width:82vw;max-width:280px}
+#howToPlayPanel{width:82vw;max-width:280px}
+.ls-header{padding:6px 0 2px}
+.ls-title{font-size:16px}
+.ls-subtitle{font-size:9px}
+.ls-world-tabs{padding:4px 8px 0}
+.ls-world-tab{padding:5px 9px;font-size:8px}
+.ls-map-area{padding:8px 10px}
+.ls-world-badge{padding:8px 12px;min-width:auto;gap:6px}
+.ls-world-badge-icon{font-size:18px}
+.ls-world-badge-text{font-size:12px}
+.ls-world-badge-sub{font-size:9px}
+.ls-path{grid-template-columns:repeat(5,1fr);gap:6px}
+.ls-node-box{width:48px;height:48px;border-radius:8px}
+.ls-node-box::before{display:none}
+.ls-node-num{font-size:15px}
+.ls-node-lock{font-size:12px}
+.ls-node-stars{font-size:8px}
+.ls-node-name{font-size:7px;max-width:52px;margin-top:2px}
+/* Start screen */
+.start-buttons{flex-direction:column;align-items:center;gap:8px}
+.start-btn-main{padding:11px 32px;font-size:13px}
+.start-btn-sec{padding:8px 20px;font-size:10px}
+/* Game screens */
+#levelCompleteScreen h1{font-size:18px}
+#gameOverScreen h1{font-size:22px}
+.star-rating{font-size:24px}
+.stats-panel{padding:10px 16px;max-width:250px}
+.stats-panel p{font-size:11px}
+.menu-btn2{padding:9px 22px;font-size:12px;min-width:120px}
+/* Progress bar */
+#progressBar{width:120px;height:4px;bottom:36px}
+/* Mobile buttons */
+.mobile-btn{width:48px;height:48px;font-size:18px}
+#btnLeft{left:12px;bottom:8px}
+#btnRight{left:70px;bottom:8px}
+#btnJump{right:12px;bottom:8px}
+#btnAction{right:12px;bottom:65px}
+}
+
+@media(max-width:380px){
+/* Very small phones */
+.menu-logo{display:none}
+.menu-nav{gap:2px}
+.menu-btn{padding:3px 6px;font-size:8px}
+.menu-stats{gap:3px}
+.menu-stat{font-size:8px}
+.ls-path{gap:4px}
+.ls-node-box{width:42px;height:42px;border-radius:6px}
+.ls-node-num{font-size:13px}
+.ls-node-name{display:none}
+.ls-world-tab{padding:4px 7px;font-size:7px}
+.start-btn-main{padding:10px 26px;font-size:12px}
+.start-btn-sec{padding:7px 16px;font-size:9px}
+}
+</style>
+</head>
+<body>
+<div id="gameContainer">
+<canvas id="gameCanvas"></canvas>
+
+<!-- MENU BAR -->
+<div id="menuBar">
+<div class="menu-logo"><span>&#x1F9D9;</span>Wizard's Quest</div>
+<div class="menu-nav">
+<button class="menu-btn" id="menuPlay">&#9654;</button>
+<button class="menu-btn" id="menuLevels">&#x1F5FA;</button>
+<button class="menu-btn" id="menuSettings">&#9881;</button>
+<button class="menu-btn" id="menuHelp">&#10067;</button>
+</div>
+<div class="menu-stats">
+<div class="menu-stat"><span>&#x1F48E;</span><span class="val" id="menuCrystals">0</span></div>
+<div class="menu-stat"><span>&#11088;</span><span class="val" id="menuScore">0</span></div>
+<div class="menu-stat"><span>&#127942;</span><span class="val" id="menuBest">0</span></div>
+</div>
+</div>
+
+<!-- UI -->
+<div id="ui">
+<div class="ui-item"><span class="ui-icon">&#x1F9D9;</span><span>x</span><span class="ui-value" id="lives">3</span></div>
+<div class="ui-item"><span class="ui-icon">&#x1F48E;</span><span class="ui-value" id="coins">0</span></div>
+<div class="ui-item"><span class="ui-icon">&#11088;</span><span class="ui-value" id="score">0</span></div>
+<div class="ui-item"><span class="ui-icon">&#9201;</span><span class="ui-value" id="time">400</span></div>
+</div>
+
+<div id="levelIndicator">Level 1: Mushroom Kingdom</div>
+<div id="progressBar"><div id="progressFill"></div></div>
+<div id="controls">&#8592; &#8594; Move | SPACE Jump | &#8595; House | P Pause | D Debug</div>
+<div id="debugPanel"></div>
+
+<!-- MOBILE CONTROLS -->
+<div id="mobileControls">
+<div class="mobile-btn" id="btnLeft">&#8592;</div>
+<div class="mobile-btn" id="btnRight">&#8594;</div>
+<div class="mobile-btn" id="btnJump">&#8593;</div>
+<div class="mobile-btn" id="btnAction">&#8595;</div>
+</div>
+
+<!-- SCREENS -->
+<div id="startScreen">
+<canvas id="titleCanvas"></canvas>
+<div class="start-buttons">
+<button class="start-btn-sec" id="loadGameBtn">&#128214; LOAD GAME</button>
+<button class="start-btn-main" id="startBtn">&#10022; START GAME &#10022;</button>
+<button class="start-btn-sec" id="startSettingsBtn">&#9881; SETTINGS</button>
+</div>
+</div>
+
+<div id="levelSelectScreen">
+<canvas id="levelSelectBg"></canvas>
+<div class="ls-header">
+<div class="ls-title">WIZARD'S QUEST</div>
+<div class="ls-subtitle">The Crystal Adventure</div>
+</div>
+<div class="ls-world-tabs" id="worldTabs"></div>
+<div class="ls-map-area" id="levelMapArea"></div>
+</div>
+
+<div id="levelCompleteScreen">
+<h1>&#127881; LEVEL COMPLETE!</h1>
+<div class="star-rating" id="starRating">&#11088;&#11088;&#11088;</div>
+<div class="stats-panel">
+<p>Score: <span id="levelScore">0</span></p>
+<p>Crystals: <span id="levelCrystals">0</span></p>
+<p>Time Bonus: <span id="timeBonus">0</span></p>
+</div>
+<button class="menu-btn2" id="nextLevelBtn">Next &#8594;</button>
+<button class="menu-btn2" id="retryLevelBtn">Retry &#8635;</button>
+</div>
+
+<div id="pauseMenu">
+<h2>&#9208; PAUSED</h2>
+<button class="menu-btn2" id="resumeBtn">Resume</button>
+<button class="menu-btn2" id="restartBtn">Restart</button>
+<button class="menu-btn2" id="quitBtn">Quit</button>
+</div>
+
+<div id="gameOverScreen">
+<h1>&#128128; GAME OVER</h1>
+<div class="stats-panel">
+<p>Final Score: <span id="finalScore">0</span></p>
+<p>Levels Done: <span id="levelsCompleted">0</span></p>
+<p>Total Crystals: <span id="totalCrystals">0</span></p>
+</div>
+<button class="menu-btn2" id="tryAgainBtn">Try Again &#8635;</button>
+<button class="menu-btn2" id="menuBtn">Menu &#127968;</button>
+</div>
+
+<!-- SETTINGS PANEL -->
+<div id="settingsPanel">
+<div class="settings-header">
+<h3>&#9881; Settings</h3>
+<button class="settings-close" id="settingsClose">&#10005;</button>
+</div>
+<div class="settings-section">
+<h4>Audio</h4>
+<div class="setting-row">
+<span class="setting-label">Sound Effects</span>
+<div class="setting-toggle on" id="toggleSfx"></div>
+</div>
+<div class="setting-row">
+<span class="setting-label">Volume</span>
+</div>
+<div class="setting-slider">
+<input type="range" min="0" max="100" value="70" id="volumeSlider">
+</div>
+</div>
+<div class="settings-section">
+<h4>Display</h4>
+<div class="setting-row">
+<span class="setting-label">Show FPS</span>
+<div class="setting-toggle" id="toggleFps"></div>
+</div>
+<div class="setting-row">
+<span class="setting-label">Particles</span>
+<div class="setting-toggle on" id="toggleParticles"></div>
+</div>
+<div class="setting-row">
+<span class="setting-label">Screen Shake</span>
+<div class="setting-toggle on" id="toggleShake"></div>
+</div>
+</div>
+<div class="settings-section">
+<h4>Controls</h4>
+<div class="settings-keys">
+<div class="key-row"><span class="key-action">Move Left</span><span class="key-bind">&#8592; / A</span></div>
+<div class="key-row"><span class="key-action">Move Right</span><span class="key-bind">&#8594; / D</span></div>
+<div class="key-row"><span class="key-action">Jump</span><span class="key-bind">Space / W</span></div>
+<div class="key-row"><span class="key-action">Interact</span><span class="key-bind">&#8595; / S</span></div>
+<div class="key-row"><span class="key-action">Pause</span><span class="key-bind">P / Esc</span></div>
+<div class="key-row"><span class="key-action">Debug</span><span class="key-bind">D</span></div>
+</div>
+</div>
+<div class="settings-section">
+<h4>Game</h4>
+<div class="setting-row">
+<span class="setting-label">Reset Progress</span>
+<button class="menu-btn2" id="resetProgressBtn" style="min-width:auto;padding:6px 14px;font-size:11px;margin:0;background:rgba(200,50,50,0.3);border-color:rgba(200,50,50,0.5)">Reset</button>
+</div>
+</div>
+<div class="settings-version">Wizard's Quest v2.0.0</div>
+</div>
+
+<!-- HOW TO PLAY PANEL -->
+<div id="howToPlayPanel">
+<div class="htp-header">
+<h3>&#128214; How to Play</h3>
+<button class="settings-close" id="htpClose">&#10005;</button>
+</div>
+<div class="htp-content">
+<div class="htp-section">
+<h4>&#127918; Basic Controls</h4>
+<div class="htp-grid">
+<div class="htp-item"><span class="htp-key">&#8592; &#8594;</span><span class="htp-desc">Move Left / Right</span></div>
+<div class="htp-item"><span class="htp-key">SPACE</span><span class="htp-desc">Jump (double jump if upgraded)</span></div>
+<div class="htp-item"><span class="htp-key">X / F</span><span class="htp-desc">Cast Magic Spell</span></div>
+<div class="htp-item"><span class="htp-key">&#8595;</span><span class="htp-desc">Enter Mushroom Houses</span></div>
+<div class="htp-item"><span class="htp-key">P / ESC</span><span class="htp-desc">Pause Game</span></div>
+<div class="htp-item"><span class="htp-key">D</span><span class="htp-desc">Toggle Debug Mode</span></div>
+</div>
+</div>
+<div class="htp-section">
+<h4>&#127919; Objectives</h4>
+<div class="htp-list">
+<p>&#128142; Collect crystals to earn score and currency</p>
+<p>&#11088; Reach the flag at the end to complete the level</p>
+<p>&#128128; Avoid enemies or stomp them from above</p>
+<p>&#10067; Hit question blocks from below for rewards</p>
+<p>&#127968; Enter mushroom houses for lives, coins, or power-ups</p>
+</div>
+</div>
+<div class="htp-section">
+<h4>&#9889; Magic Spells</h4>
+<div class="htp-list">
+<p>Press <strong>X</strong> or <strong>F</strong> to fire a magic bolt</p>
+<p>Spells kill enemies at range — build combos!</p>
+<p>Cooldown between casts (upgradeable in shop)</p>
+</div>
+</div>
+<div class="htp-section">
+<h4>&#128293; Combo System</h4>
+<div class="htp-list">
+<p>Chain kills and crystal pickups without pausing</p>
+<p>5x = 2x multiplier, 10x = 3x, 20x = 4x, 50x = 8x!</p>
+<p>Combo timer resets if you stop collecting</p>
+</div>
+</div>
+<div class="htp-section">
+<h4>&#127941; Progression</h4>
+<div class="htp-list">
+<p>&#128200; Earn XP from every action — level up for bonuses</p>
+<p>&#128176; Spend crystals in the Shop for permanent upgrades</p>
+<p>&#127912; Unlock wizard skins to customize your character</p>
+<p>&#128197; Login daily for streak bonuses (up to 200 crystals!)</p>
+<p>&#127942; Complete achievements for XP and crystal rewards</p>
+</div>
+</div>
+<div class="htp-section">
+<h4>&#11088; Star Rating</h4>
+<div class="htp-list">
+<p>&#11088; = Complete the level</p>
+<p>&#11088;&#11088; = Collect 20+ crystals</p>
+<p>&#11088;&#11088;&#11088; = 30+ crystals AND all 3 lives remaining</p>
+</div>
+</div>
+<div class="htp-section">
+<h4>&#128161; Tips</h4>
+<div class="htp-list">
+<p>&#8226; Buy Crystal Magnet early — auto-collects nearby gems</p>
+<p>&#8226; Double Jump opens up many shortcuts</p>
+<p>&#8226; Use spells to safely clear enemies from platforms</p>
+<p>&#8226; Each world has a unique boss level (#10) — be prepared!</p>
+<p>&#8226; Daily challenges give huge crystal rewards</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+// ===== AUDIO =====
+const AudioContext=window.AudioContext||window.webkitAudioContext;let audioCtx=null;
+function initAudio(){if(!audioCtx)audioCtx=new AudioContext()}
+function getVolume(){return(typeof gameSettings!=='undefined'?gameSettings.volume:70)/100*0.4}
+function sfxEnabled(){return typeof gameSettings==='undefined'||gameSettings.sfx}
+const SoundFX={
+jump:()=>{if(!audioCtx||!sfxEnabled())return;const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.connect(g);g.connect(audioCtx.destination);o.type='square';o.frequency.setValueAtTime(300,audioCtx.currentTime);o.frequency.exponentialRampToValueAtTime(600,audioCtx.currentTime+0.1);g.gain.setValueAtTime(getVolume(),audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.15);o.start();o.stop(audioCtx.currentTime+0.15)},
+coin:()=>{if(!audioCtx||!sfxEnabled())return;const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.connect(g);g.connect(audioCtx.destination);o.type='sine';o.frequency.setValueAtTime(1200,audioCtx.currentTime);o.frequency.setValueAtTime(1600,audioCtx.currentTime+0.05);g.gain.setValueAtTime(getVolume()*0.7,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.15);o.start();o.stop(audioCtx.currentTime+0.15)},
+powerup:()=>{if(!audioCtx||!sfxEnabled())return;const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.connect(g);g.connect(audioCtx.destination);o.type='sawtooth';o.frequency.setValueAtTime(400,audioCtx.currentTime);o.frequency.exponentialRampToValueAtTime(800,audioCtx.currentTime+0.2);o.frequency.exponentialRampToValueAtTime(1200,audioCtx.currentTime+0.4);g.gain.setValueAtTime(getVolume(),audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.5);o.start();o.stop(audioCtx.currentTime+0.5)},
+stomp:()=>{if(!audioCtx||!sfxEnabled())return;const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.connect(g);g.connect(audioCtx.destination);o.type='square';o.frequency.setValueAtTime(150,audioCtx.currentTime);o.frequency.exponentialRampToValueAtTime(50,audioCtx.currentTime+0.2);g.gain.setValueAtTime(getVolume(),audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.2);o.start();o.stop(audioCtx.currentTime+0.2)},
+hit:()=>{if(!audioCtx||!sfxEnabled())return;const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.connect(g);g.connect(audioCtx.destination);o.type='sawtooth';o.frequency.setValueAtTime(200,audioCtx.currentTime);o.frequency.exponentialRampToValueAtTime(100,audioCtx.currentTime+0.3);g.gain.setValueAtTime(getVolume(),audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.3);o.start();o.stop(audioCtx.currentTime+0.3)},
+block:()=>{if(!audioCtx||!sfxEnabled())return;const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.connect(g);g.connect(audioCtx.destination);o.type='triangle';o.frequency.setValueAtTime(800,audioCtx.currentTime);g.gain.setValueAtTime(getVolume(),audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.1);o.start();o.stop(audioCtx.currentTime+0.1)},
+levelComplete:()=>{if(!audioCtx||!sfxEnabled())return;[523,659,784,1047].forEach((f,i)=>{const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.connect(g);g.connect(audioCtx.destination);o.type='sine';o.frequency.setValueAtTime(f,audioCtx.currentTime+i*0.15);g.gain.setValueAtTime(getVolume()*0.7,audioCtx.currentTime+i*0.15);g.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+i*0.15+0.3);o.start(audioCtx.currentTime+i*0.15);o.stop(audioCtx.currentTime+i*0.15+0.3)})},
+gameOver:()=>{if(!audioCtx||!sfxEnabled())return;[400,350,300,200].forEach((f,i)=>{const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.connect(g);g.connect(audioCtx.destination);o.type='sawtooth';o.frequency.setValueAtTime(f,audioCtx.currentTime+i*0.2);g.gain.setValueAtTime(getVolume(),audioCtx.currentTime+i*0.2);g.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+i*0.2+0.3);o.start(audioCtx.currentTime+i*0.2);o.stop(audioCtx.currentTime+i*0.2+0.3)})}
+};
+
+// ===== ENGINE =====
+const canvas=document.getElementById('gameCanvas');
+const ctx=canvas.getContext('2d');
+const container=document.getElementById('gameContainer');
+
+function resizeCanvas(){
+canvas.width=container.clientWidth;
+canvas.height=container.clientHeight;
+}
+resizeCanvas();
+window.addEventListener('resize',resizeCanvas);
+
+const gameState={running:false,paused:false,score:0,coins:0,lives:3,time:400,camera:{x:0,y:0},gravity:0.6,friction:0.85,currentLevel:1,maxUnlockedLevel:100,levelScores:{},totalCrystals:0,levelsCompleted:0,bestScore:0,debug:false};
+
+const LEVELS={};
+// Generate 100 levels procedurally across 10 worlds
+const WORLDS=[
+{name:"Mushroom Kingdom",theme:"forest",levels:10,icon:"\ud83c\udf44"},
+{name:"Crystal Caves",theme:"cave",levels:10,icon:"\ud83d\udc8e"},
+{name:"Sky Kingdom",theme:"sky",levels:10,icon:"\u2601"},
+{name:"Volcano Dungeon",theme:"volcano",levels:10,icon:"\ud83c\udf0b"},
+{name:"Frozen Peaks",theme:"ice",levels:10,icon:"\u2744"},
+{name:"Shadow Forest",theme:"dark",levels:10,icon:"\ud83c\udf32"},
+{name:"Ocean Depths",theme:"ocean",levels:10,icon:"\ud83c\udf0a"},
+{name:"Desert Ruins",theme:"desert",levels:10,icon:"\ud83c\udfdc"},
+{name:"Neon City",theme:"neon",levels:10,icon:"\ud83c\udf03"},
+{name:"Wizard's Tower",theme:"final",levels:10,icon:"\ud83d\uddfc"}
+];
+(function generateAllLevels(){
+const themes=['forest','cave','sky','volcano','ice','dark','ocean','desert','neon','final'];
+const housePool=[['red','yellow','blue','orange'],['blue','blue','orange'],['yellow','red','orange','blue'],['red','red','orange','yellow','blue']];
+const shadowForestNames=['Foggy Entrance','Treehouse Village','Hollow Ravine','Mushroom Bounce','Spider\'s Nest','Vertical Tower','Crystal Grove','Shadow Sprint','Ancient Ruins','The Shadow King'];
+const volcanoNames=['Lava Fields','Fire Bridge','Eruption Run','Magma Platforms','Crater Climb','The Furnace','Obsidian Caves','Lava Sprint','Dragon\'s Teeth','Volcano Heart'];
+const iceNames=['Snowfall Valley','Ice Slide','Frozen Lake','Blizzard','Icicle Cave','Polar Express','Crystal Cavern','Avalanche','Frozen Fortress','Ice Titan'];
+const neonNames=['City Lights','Rooftop Chase','Subway Tunnel','Neon Signs','Hackspace','Data Stream','Power Grid','Firewall','Server Room','The Virus'];
+const oceanNames=['Shallow Reef','Coral Maze','Jellyfish Fields','Shipwreck Dive','Underwater Caves','The Abyss','Bubble Rise','Current Rush','Kraken\'s Lair','The Leviathan'];
+const desertNames=['Sand Dunes','Pyramid Steps','Sandstorm','Oasis Rest','Quicksand Pits','Temple Interior','Tomb Raider','Scorpion Valley','Pharaoh\'s Curse','The Sand King'];
+const finalNames=['Tower Base','Enchanted Steps','Magic Library','Guardian Hall','Arcane Bridge','Crystal Chamber','Wizard Gauntlet','The Void','Ascension','The Dark Wizard'];
+for(let i=1;i<=100;i++){
+const worldIdx=Math.floor((i-1)/10);
+const localLvl=((i-1)%10)+1;
+const w=WORLDS[worldIdx];
+const difficulty=i/100;
+let levelName=w.name+" "+localLvl;
+if(worldIdx===3)levelName=volcanoNames[localLvl-1];
+if(worldIdx===4)levelName=iceNames[localLvl-1];
+if(worldIdx===5)levelName=shadowForestNames[localLvl-1];
+if(worldIdx===6)levelName=oceanNames[localLvl-1];
+if(worldIdx===7)levelName=desertNames[localLvl-1];
+if(worldIdx===8)levelName=neonNames[localLvl-1];
+if(worldIdx===9)levelName=finalNames[localLvl-1];
+LEVELS[i]={
+name:levelName,
+world:worldIdx+1,
+worldName:w.name,
+width:2500+Math.floor(difficulty*5000),
+gravity:0.5+difficulty*0.25,
+time:Math.max(150,420-Math.floor(difficulty*250)),
+enemyCount:4+Math.floor(difficulty*25),
+crystalCount:20+Math.floor(difficulty*50),
+houseTypes:housePool[worldIdx%housePool.length],
+pipeCount:3+Math.floor(difficulty*12),
+theme:w.theme
+};
+}
+})();
+
+const keys={};
+window.addEventListener('keydown',(e)=>{
+if(e.code==='KeyP'||e.code==='Escape'){togglePause();return}
+if(e.code==='KeyD'){gameState.debug=!gameState.debug;document.getElementById('debugPanel').style.display=gameState.debug?'block':'none';return}
+keys[e.code]=true;
+if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault()
+});
+window.addEventListener('keyup',(e)=>keys[e.code]=false);
+
+// MOBILE TOUCH CONTROLS
+const btnLeft=document.getElementById('btnLeft');
+const btnRight=document.getElementById('btnRight');
+const btnJump=document.getElementById('btnJump');
+const btnAction=document.getElementById('btnAction');
+
+function setupMobileBtn(btn,key){
+btn.addEventListener('touchstart',(e)=>{e.preventDefault();keys[key]=true});
+btn.addEventListener('touchend',(e)=>{e.preventDefault();keys[key]=false});
+btn.addEventListener('mousedown',(e)=>{e.preventDefault();keys[key]=true});
+btn.addEventListener('mouseup',(e)=>{e.preventDefault();keys[key]=false});
+btn.addEventListener('mouseleave',(e)=>{e.preventDefault();keys[key]=false});
+}
+setupMobileBtn(btnLeft,'ArrowLeft');
+setupMobileBtn(btnRight,'ArrowRight');
+setupMobileBtn(btnJump,'Space');
+setupMobileBtn(btnAction,'ArrowDown');
+
+// ===== PARTICLES =====
+class ParticleSystem{
+constructor(){this.particles=[]}
+emit(x,y,type,count){
+for(let i=0;i<count;i++){
+this.particles.push({x,y,vx:(Math.random()-0.5)*8,vy:(Math.random()-0.5)*8,life:1,decay:0.02+Math.random()*0.03,size:3+Math.random()*5,type,color:this.getColor(type)})
+}
+}
+getColor(type){
+const colors={crystal:['#00ffff','#e0ffff','#00cccc'],magic:['#9b59b6','#f1c40f','#e74c3c'],jump:['#90EE90','#2ecc71','#27ae60'],death:['#ff0000','#ff6600','#ffff00'],lava:['#ff4500','#ff6600','#ff8c00']};
+return colors[type]||colors.magic
+}
+update(){
+for(let i=this.particles.length-1;i>=0;i--){
+const p=this.particles[i];p.x+=p.vx;p.y+=p.vy;p.vy+=0.2;p.life-=p.decay;
+if(p.life<=0)this.particles.splice(i,1)
+}
+}
+draw(ctx){
+for(const p of this.particles){
+ctx.save();ctx.globalAlpha=p.life;
+const color=p.color[Math.floor(Math.random()*p.color.length)];
+ctx.fillStyle=color;ctx.shadowColor=color;ctx.shadowBlur=10;
+ctx.beginPath();ctx.arc(p.x-gameState.camera.x,p.y-gameState.camera.y,p.size*p.life,0,Math.PI*2);ctx.fill();
+ctx.restore()
+}
+}
+}
+const particles=new ParticleSystem();
+
+function draw3DCrystal(ctx,x,y,scale,rotation,time){
+const s=scale;ctx.save();ctx.translate(x,y);
+const rotX=Math.sin(time*0.002)*0.3,rotY=rotation;
+ctx.scale(Math.cos(rotY),1+Math.sin(rotX)*0.2);
+// Glow
+ctx.shadowColor='#00ffff';ctx.shadowBlur=12;
+// Main crystal body
+const crystGrad=ctx.createLinearGradient(-12*s,-20*s,12*s,20*s);
+crystGrad.addColorStop(0,'#00ffff');crystGrad.addColorStop(0.5,'#00e5ff');crystGrad.addColorStop(1,'#0097a7');
+ctx.fillStyle=crystGrad;
+ctx.beginPath();ctx.moveTo(0,-20*s);ctx.lineTo(12*s,-5*s);ctx.lineTo(8*s,10*s);ctx.lineTo(0,20*s);ctx.lineTo(-8*s,10*s);ctx.lineTo(-12*s,-5*s);ctx.closePath();ctx.fill();
+// Inner face
+ctx.fillStyle='rgba(224,255,255,0.6)';
+ctx.beginPath();ctx.moveTo(0,-15*s);ctx.lineTo(8*s,-3*s);ctx.lineTo(5*s,8*s);ctx.lineTo(0,15*s);ctx.lineTo(-5*s,8*s);ctx.lineTo(-8*s,-3*s);ctx.closePath();ctx.fill();
+// Specular highlight
+ctx.fillStyle='rgba(255,255,255,0.9)';
+ctx.beginPath();ctx.moveTo(-2*s,-14*s);ctx.lineTo(2*s,-10*s);ctx.lineTo(0,-6*s);ctx.lineTo(-3*s,-10*s);ctx.closePath();ctx.fill();
+// Outline
+ctx.strokeStyle='rgba(0,200,220,0.5)';ctx.lineWidth=1;
+ctx.beginPath();ctx.moveTo(0,-20*s);ctx.lineTo(12*s,-5*s);ctx.lineTo(8*s,10*s);ctx.lineTo(0,20*s);ctx.lineTo(-8*s,10*s);ctx.lineTo(-12*s,-5*s);ctx.closePath();ctx.stroke();
+ctx.shadowBlur=0;ctx.restore()
+}
+
+// ===== DRAWING =====
+function drawMushroomHouse(ctx,x,y,type,scale){
+const colors={red:{cap:'#e74c3c',capDark:'#c0392b',spot:'#fff',door:'#8B4513'},yellow:{cap:'#f1c40f',capDark:'#d4ac0d',spot:'#e67e22',door:'#8B4513'},blue:{cap:'#3498db',capDark:'#2980b9',spot:'#fff',door:'#8B4513'},orange:{cap:'#e67e22',capDark:'#d35400',spot:'#f1c40f',door:'#8B4513'}};
+const c=colors[type]||colors.red;const s=scale;
+ctx.save();ctx.translate(x,y);
+// Ground shadow
+ctx.fillStyle='rgba(0,0,0,0.25)';
+ctx.beginPath();ctx.ellipse(0,50*s,40*s,8*s,0,0,Math.PI*2);ctx.fill();
+// House base
+ctx.fillStyle='#f5deb3';ctx.fillRect(-30*s,-2*s,60*s,52*s);
+ctx.strokeStyle='#d2b48c';ctx.lineWidth=1;ctx.strokeRect(-30*s,-2*s,60*s,52*s);
+// Door
+ctx.fillStyle=c.door;ctx.beginPath();ctx.arc(0,25*s,14*s,Math.PI,0);ctx.fill();ctx.fillRect(-14*s,25*s,28*s,25*s);
+ctx.fillStyle='#ffd700';ctx.beginPath();ctx.arc(7*s,32*s,2*s,0,Math.PI*2);ctx.fill();
+// Window
+ctx.fillStyle='#87CEEB';ctx.beginPath();ctx.arc(-14*s,12*s,7*s,0,Math.PI*2);ctx.fill();
+ctx.strokeStyle='#8B4513';ctx.lineWidth=2;ctx.stroke();
+ctx.strokeStyle='#8B4513';ctx.beginPath();ctx.moveTo(-14*s,5*s);ctx.lineTo(-14*s,19*s);ctx.moveTo(-21*s,12*s);ctx.lineTo(-7*s,12*s);ctx.stroke();
+// Mushroom cap (attached directly to house top — NO gap)
+const capGrad=ctx.createRadialGradient(0,-20*s,5*s,0,-15*s,50*s);
+capGrad.addColorStop(0,c.cap);capGrad.addColorStop(1,c.capDark);
+ctx.fillStyle=capGrad;ctx.beginPath();ctx.arc(0,-2*s,48*s,Math.PI,0);ctx.fill();
+// Cap underside shadow
+ctx.fillStyle='rgba(0,0,0,0.15)';ctx.fillRect(-48*s,-4*s,96*s,4*s);
+// Spots on cap
+ctx.fillStyle=c.spot;
+[{x:-22*s,y:-28*s,r:7*s},{x:18*s,y:-24*s,r:9*s},{x:0,y:-38*s,r:6*s},{x:-8*s,y:-16*s,r:5*s},{x:28*s,y:-14*s,r:6*s}].forEach(spot=>{ctx.beginPath();ctx.arc(spot.x,spot.y,spot.r,0,Math.PI*2);ctx.fill()});
+// Cap outline
+ctx.strokeStyle='rgba(0,0,0,0.2)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(0,-2*s,48*s,Math.PI,0);ctx.stroke();
+ctx.restore()
+}
+
+function drawPipe(ctx,x,y,height,scale){
+const s=scale,w=40*s,h=height*s;
+ctx.save();ctx.translate(x,y);
+// Ground shadow
+ctx.fillStyle='rgba(0,0,0,0.2)';ctx.beginPath();ctx.ellipse(0,2*s,w/2+3*s,4*s,0,0,Math.PI*2);ctx.fill();
+// Pipe body with gradient
+const gradient=ctx.createLinearGradient(-w/2,0,w/2,0);
+gradient.addColorStop(0,'#1e8449');gradient.addColorStop(0.2,'#27ae60');gradient.addColorStop(0.5,'#2ecc71');gradient.addColorStop(0.8,'#27ae60');gradient.addColorStop(1,'#1e8449');
+ctx.fillStyle=gradient;ctx.fillRect(-w/2,-h,w,h);
+// Pipe lip
+const lipGrad=ctx.createLinearGradient(-w/2-5*s,0,w/2+5*s,0);
+lipGrad.addColorStop(0,'#1e8449');lipGrad.addColorStop(0.3,'#2ecc71');lipGrad.addColorStop(0.7,'#2ecc71');lipGrad.addColorStop(1,'#1e8449');
+ctx.fillStyle=lipGrad;ctx.fillRect(-w/2-5*s,-h-10*s,w+10*s,14*s);
+// Highlight
+ctx.fillStyle='rgba(255,255,255,0.2)';ctx.fillRect(-w/2+5*s,-h,7*s,h);
+// Dark edge
+ctx.fillStyle='rgba(0,0,0,0.15)';ctx.fillRect(w/2-7*s,-h,7*s,h);
+// Outline
+ctx.strokeStyle='rgba(0,0,0,0.2)';ctx.lineWidth=1;ctx.strokeRect(-w/2,-h,w,h);
+ctx.restore()
+}
+
+function drawQuestionBlock(ctx,x,y,isEmpty,scale){
+const s=scale,size=32*s;
+ctx.save();ctx.translate(x,y);
+// Shadow beneath block
+ctx.fillStyle='rgba(0,0,0,0.2)';ctx.beginPath();ctx.ellipse(0,size/2+4*s,14*s,3*s,0,0,Math.PI*2);ctx.fill();
+if(isEmpty){
+ctx.fillStyle='#6b4423';ctx.fillRect(-size/2,-size/2,size,size);
+ctx.strokeStyle='#4a2f15';ctx.lineWidth=2;ctx.strokeRect(-size/2,-size/2,size,size);
+ctx.fillStyle='#4a2f15';ctx.fillRect(-size/2+4*s,-size/2+4*s,4*s,4*s);ctx.fillRect(size/2-8*s,-size/2+4*s,4*s,4*s);ctx.fillRect(-size/2+4*s,size/2-8*s,4*s,4*s);ctx.fillRect(size/2-8*s,size/2-8*s,4*s,4*s);
+}else{
+const time=Date.now()/300;const glow=Math.sin(time)*0.15+0.85;
+const blockGrad=ctx.createLinearGradient(-size/2,-size/2,size/2,size/2);
+blockGrad.addColorStop(0,`rgb(${255*glow},${210*glow},${40*glow})`);
+blockGrad.addColorStop(1,`rgb(${220*glow},${170*glow},${20*glow})`);
+ctx.fillStyle=blockGrad;ctx.fillRect(-size/2,-size/2,size,size);
+// Inner border
+ctx.strokeStyle='#b8860b';ctx.lineWidth=2;ctx.strokeRect(-size/2+3*s,-size/2+3*s,size-6*s,size-6*s);
+// Outer border
+ctx.strokeStyle='#8b6508';ctx.lineWidth=2.5;ctx.strokeRect(-size/2,-size/2,size,size);
+// Question mark
+ctx.fillStyle='#5c3d08';ctx.font=`bold ${18*s}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('?',0,1*s);
+// Highlight
+ctx.fillStyle='rgba(255,255,255,0.3)';ctx.fillRect(-size/2+3*s,-size/2+3*s,size-6*s,6*s);
+}
+ctx.restore()
+}
+
+function drawGoomba(ctx,x,y,scale,isStomped){
+const s=scale;ctx.save();ctx.translate(x,y);
+if(isStomped){ctx.fillStyle='#8B4513';ctx.beginPath();ctx.ellipse(0,10*s,20*s,5*s,0,0,Math.PI*2);ctx.fill();ctx.restore();return}
+// Contact shadow
+ctx.fillStyle='rgba(0,0,0,0.3)';ctx.beginPath();ctx.ellipse(0,18*s,16*s,4*s,0,0,Math.PI*2);ctx.fill();
+// Body (bottom half)
+const bodyGrad=ctx.createLinearGradient(0,-18*s,0,15*s);
+bodyGrad.addColorStop(0,'#a0522d');bodyGrad.addColorStop(1,'#6b3410');
+ctx.fillStyle=bodyGrad;ctx.beginPath();ctx.arc(0,0,18*s,Math.PI,0);ctx.fill();ctx.fillRect(-18*s,0,36*s,14*s);
+// Feet (grounded)
+ctx.fillStyle='#2c1a0a';
+ctx.beginPath();ctx.ellipse(-10*s,14*s,8*s,5*s,0,0,Math.PI*2);ctx.fill();
+ctx.beginPath();ctx.ellipse(10*s,14*s,8*s,5*s,0,0,Math.PI*2);ctx.fill();
+// Face area
+ctx.fillStyle='#f5deb3';ctx.beginPath();ctx.arc(0,-2*s,12*s,0,Math.PI*2);ctx.fill();
+// Eyes (polished)
+ctx.fillStyle='#fff';ctx.beginPath();ctx.ellipse(-5*s,-5*s,5*s,6*s,0,0,Math.PI*2);ctx.fill();
+ctx.beginPath();ctx.ellipse(5*s,-5*s,5*s,6*s,0,0,Math.PI*2);ctx.fill();
+ctx.fillStyle='#1a1a1a';ctx.beginPath();ctx.arc(-4*s,-5*s,2.5*s,0,Math.PI*2);ctx.fill();
+ctx.beginPath();ctx.arc(6*s,-5*s,2.5*s,0,Math.PI*2);ctx.fill();
+// Eyebrows (angry)
+ctx.strokeStyle='#4a2a0a';ctx.lineWidth=2*s;
+ctx.beginPath();ctx.moveTo(-10*s,-10*s);ctx.lineTo(-3*s,-8*s);ctx.stroke();
+ctx.beginPath();ctx.moveTo(3*s,-8*s);ctx.lineTo(10*s,-10*s);ctx.stroke();
+// Mouth
+ctx.fillStyle='#2c1a0a';ctx.beginPath();ctx.moveTo(-4*s,4*s);ctx.lineTo(0,7*s);ctx.lineTo(4*s,4*s);ctx.closePath();ctx.fill();
+// Body outline
+ctx.strokeStyle='rgba(0,0,0,0.3)';ctx.lineWidth=1;
+ctx.beginPath();ctx.arc(0,0,18*s,Math.PI,0);ctx.stroke();
+ctx.restore()
+}
+
+// ===== PLATFORM CLASS - FIXED GROUND =====
+class Platform{
+constructor(x,y,width,height,type){
+this.x=x;this.y=y;this.width=width;this.height=height;this.type=type||'normal'
+}
+draw(ctx){
+const screenX=this.x-gameState.camera.x;
+const screenY=this.y-gameState.camera.y;
+if(screenX+this.width<-50||screenX>canvas.width+50)return;
+ctx.save();
+const config=LEVELS[gameState.currentLevel]||LEVELS[1];
+if(config.theme==='volcano'){
+ctx.fillStyle='#2d1a1a';ctx.fillRect(screenX,screenY,this.width,this.height);
+ctx.fillStyle='#4a2a2a';for(let i=0;i<this.width;i+=30){ctx.fillRect(screenX+i,screenY,15,this.height)}
+ctx.fillStyle='#ff4500';ctx.globalAlpha=0.3+Math.sin(Date.now()/300)*0.2;
+for(let i=0;i<this.width;i+=60){ctx.fillRect(screenX+i+10,screenY+5,3,this.height-10)}
+ctx.globalAlpha=1;
+ctx.shadowColor='#9b59b6';ctx.shadowBlur=10;
+ctx.fillStyle='rgba(155,89,182,0.2)';ctx.fillRect(screenX,screenY,this.width,5);ctx.shadowBlur=0
+}else if(config.theme==='cave'){
+ctx.fillStyle='#3a1a5e';ctx.fillRect(screenX,screenY,this.width,this.height);
+ctx.fillStyle='#2a0a4e';ctx.fillRect(screenX,screenY+10,this.width,this.height-10);
+ctx.fillStyle='#4a2a6e';for(let i=0;i<this.width;i+=20){ctx.fillRect(screenX+i,screenY+15,8,4);ctx.fillRect(screenX+i+10,screenY+30,6,3)}
+ctx.shadowColor='#9b59b6';ctx.shadowBlur=10;
+ctx.fillStyle='rgba(155,89,182,0.2)';ctx.fillRect(screenX,screenY,this.width,5);ctx.shadowBlur=0
+}else if(config.theme==='sky'){
+ctx.fillStyle='#87CEEB';ctx.fillRect(screenX,screenY,this.width,this.height);
+ctx.fillStyle='#5DADE2';ctx.fillRect(screenX,screenY+10,this.width,this.height-10);
+ctx.fillStyle='#fff';for(let i=0;i<this.width;i+=40){ctx.beginPath();ctx.arc(screenX+i+20,screenY,15,Math.PI,0);ctx.fill()}
+}else if(config.theme==='ice'){
+ctx.fillStyle='#b8e6f0';ctx.fillRect(screenX,screenY,this.width,this.height);
+ctx.fillStyle='#8bc4d4';ctx.fillRect(screenX,screenY+10,this.width,this.height-10);
+ctx.fillStyle='rgba(255,255,255,0.4)';for(let i=0;i<this.width;i+=25){ctx.fillRect(screenX+i,screenY+2,12,3)}
+}else if(config.theme==='dark'){
+ctx.fillStyle='#1a2a1a';ctx.fillRect(screenX,screenY,this.width,this.height);
+ctx.fillStyle='#0f1a0f';ctx.fillRect(screenX,screenY+10,this.width,this.height-10);
+ctx.fillStyle='#2a3a2a';for(let i=0;i<this.width;i+=30){ctx.fillRect(screenX+i,screenY+12,10,4)}
+}else if(config.theme==='ocean'){
+ctx.fillStyle='#1a5276';ctx.fillRect(screenX,screenY,this.width,this.height);
+ctx.fillStyle='#154360';ctx.fillRect(screenX,screenY+10,this.width,this.height-10);
+ctx.fillStyle='rgba(100,200,255,0.2)';for(let i=0;i<this.width;i+=20){ctx.fillRect(screenX+i,screenY+5,8,3)}
+}else if(config.theme==='desert'){
+ctx.fillStyle='#d4a056';ctx.fillRect(screenX,screenY,this.width,this.height);
+ctx.fillStyle='#b8863c';ctx.fillRect(screenX,screenY+10,this.width,this.height-10);
+ctx.fillStyle='#c49040';for(let i=0;i<this.width;i+=25){ctx.fillRect(screenX+i,screenY+14,8,3)}
+}else if(config.theme==='neon'){
+ctx.fillStyle='#1a1a2e';ctx.fillRect(screenX,screenY,this.width,this.height);
+ctx.fillStyle='#0f0f1e';ctx.fillRect(screenX,screenY+10,this.width,this.height-10);
+ctx.fillStyle='#ff00ff';ctx.globalAlpha=0.3;for(let i=0;i<this.width;i+=40){ctx.fillRect(screenX+i,screenY,2,this.height)}ctx.globalAlpha=1;
+}else if(config.theme==='final'){
+ctx.fillStyle='#2a1a4a';ctx.fillRect(screenX,screenY,this.width,this.height);
+ctx.fillStyle='#1a0a3a';ctx.fillRect(screenX,screenY+10,this.width,this.height-10);
+ctx.fillStyle='#ffd700';ctx.globalAlpha=0.2;for(let i=0;i<this.width;i+=50){ctx.fillRect(screenX+i+20,screenY+5,3,this.height-10)}ctx.globalAlpha=1;
+}else{
+ctx.fillStyle='#2ecc71';ctx.fillRect(screenX,screenY,this.width,this.height);
+ctx.fillStyle='#8B4513';ctx.fillRect(screenX,screenY+10,this.width,this.height-10);
+ctx.fillStyle='#654321';for(let i=0;i<this.width;i+=20){ctx.fillRect(screenX+i,screenY+15,8,4);ctx.fillRect(screenX+i+10,screenY+30,6,3)}
+}
+ctx.restore()
+}
+getBounds(){return{x:this.x,y:this.y,width:this.width,height:this.height}}
+}
+
+// ===== WIZARD PLAYER - FIXED WITH FALLBACK =====
+class WizardPlayer{
+constructor(x,y){
+this.x=x;this.y=y;this.width=32;this.height=56;
+this.vx=0;this.vy=0;this.speed=4;this.jumpForce=-12;
+this.grounded=false;this.facingRight=true;this.isPowered=false;
+this.invincible=false;this.invincibleTimer=0;this.wizardScale=0.18;
+this.wizardWidth=677*this.wizardScale;this.wizardHeight=369*this.wizardScale;
+this.yOffset=this.wizardHeight/2-10;this.animTimer=0;
+this.onPlatform=null;
+this.imageLoaded=false;
+this.wizardImage=new Image();
+this.wizardImage.onload=()=>{this.imageLoaded=true};
+this.wizardImage.onerror=()=>{this.imageLoaded=false};
+this.wizardImage.src='/mnt/agents/upload/Gemini_Generated_Image_yijw4yijw4yijw4y-removebg-preview.png';
+}
+update(){
+if(keys['ArrowLeft']||keys['KeyA']){this.vx=-this.speed;this.facingRight=false}
+else if(keys['ArrowRight']||keys['KeyD']){this.vx=this.speed;this.facingRight=true}
+else{this.vx*=gameState.friction;if(Math.abs(this.vx)<0.1)this.vx=0}
+
+if((keys['Space']||keys['ArrowUp']||keys['KeyW'])&&this.grounded){
+this.vy=this.jumpForce;this.grounded=false;this.onPlatform=null;
+SoundFX.jump();particles.emit(this.x,this.y,'jump',5)
+}
+
+this.vy+=gameState.gravity;
+if(this.vy>15)this.vy=15;
+
+this.x+=this.vx;
+this.y+=this.vy;
+
+this.animTimer++;
+if(this.invincible){this.invincibleTimer--;if(this.invincibleTimer<=0)this.invincible=false}
+if(this.x<0)this.x=0;
+
+if(this.y>canvas.height+200)this.die()
+}
+draw(ctx){
+if(this.invincible&&Math.floor(Date.now()/100)%2===0)return;
+const screenX=this.x-gameState.camera.x,screenY=this.y-gameState.camera.y;
+ctx.save();ctx.translate(screenX,screenY);if(!this.facingRight)ctx.scale(-1,1);
+if(this.imageLoaded&&this.wizardImage.complete&&this.wizardImage.naturalWidth>0){
+const imgWidth=this.wizardImage.width*this.wizardScale,imgHeight=this.wizardImage.height*this.wizardScale;
+ctx.drawImage(this.wizardImage,-imgWidth/2,-imgHeight+15,imgWidth,imgHeight)
+}else{this.drawProceduralWizard(ctx)}
+if(this.isPowered){ctx.shadowColor='#00ffff';ctx.shadowBlur=20+Math.sin(Date.now()/200)*10;ctx.fillStyle='rgba(0,255,255,0.3)';ctx.beginPath();ctx.arc(35,-50,15,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0}
+ctx.restore();
+
+if(gameState.debug){
+ctx.strokeStyle='#0f0';ctx.lineWidth=1;
+ctx.strokeRect(screenX-this.width/2,screenY-this.height,this.width,this.height)
+}
+}
+drawProceduralWizard(ctx){
+// Contact shadow
+ctx.fillStyle='rgba(0,0,0,0.3)';
+ctx.beginPath();ctx.ellipse(0,2,18,5,0,0,Math.PI*2);ctx.fill();
+// Robe body (wider, grounded)
+const robeGrad=ctx.createLinearGradient(-15,-65,15,0);
+robeGrad.addColorStop(0,'#7b2d8b');robeGrad.addColorStop(0.5,'#9b59b6');robeGrad.addColorStop(1,'#6c3483');
+ctx.fillStyle=robeGrad;
+ctx.beginPath();ctx.moveTo(-14,0);ctx.lineTo(-18,-45);ctx.lineTo(-12,-60);ctx.lineTo(0,-65);ctx.lineTo(12,-60);ctx.lineTo(18,-45);ctx.lineTo(14,0);ctx.closePath();ctx.fill();
+// Robe outline
+ctx.strokeStyle='#4a1a6b';ctx.lineWidth=1.5;
+ctx.beginPath();ctx.moveTo(-14,0);ctx.lineTo(-18,-45);ctx.lineTo(-12,-60);ctx.lineTo(0,-65);ctx.lineTo(12,-60);ctx.lineTo(18,-45);ctx.lineTo(14,0);ctx.stroke();
+// Belt
+ctx.fillStyle='#8B4513';ctx.fillRect(-14,-25,28,4);
+ctx.fillStyle='#ffd700';ctx.beginPath();ctx.arc(0,-23,3,0,Math.PI*2);ctx.fill();
+// Face (connected to body — no gap)
+ctx.fillStyle='#f0d9b5';ctx.beginPath();ctx.arc(0,-52,10,0,Math.PI*2);ctx.fill();
+// Eyes
+ctx.fillStyle='#2c3e50';ctx.beginPath();ctx.arc(-4,-53,2,0,Math.PI*2);ctx.arc(4,-53,2,0,Math.PI*2);ctx.fill();
+// Beard
+ctx.fillStyle='#bdc3c7';ctx.beginPath();ctx.moveTo(-6,-46);ctx.lineTo(0,-38);ctx.lineTo(6,-46);ctx.closePath();ctx.fill();
+// Hat (sits on head)
+const hatGrad=ctx.createLinearGradient(0,-95,0,-58);
+hatGrad.addColorStop(0,'#6c3483');hatGrad.addColorStop(1,'#9b59b6');
+ctx.fillStyle=hatGrad;
+ctx.beginPath();ctx.moveTo(-16,-58);ctx.lineTo(-3,-95);ctx.lineTo(8,-88);ctx.lineTo(18,-58);ctx.closePath();ctx.fill();
+// Hat brim
+ctx.fillStyle='#4a1a6b';ctx.beginPath();ctx.ellipse(0,-58,20,5,0,0,Math.PI*2);ctx.fill();
+// Hat star
+ctx.fillStyle='#ffd700';ctx.beginPath();ctx.arc(2,-72,3,0,Math.PI*2);ctx.fill();
+// Stars on robe
+ctx.fillStyle='#ffd700';
+ctx.beginPath();ctx.arc(-6,-40,2,0,Math.PI*2);ctx.fill();
+ctx.beginPath();ctx.arc(5,-50,2,0,Math.PI*2);ctx.fill();
+ctx.beginPath();ctx.arc(-3,-30,1.5,0,Math.PI*2);ctx.fill();
+// Staff
+ctx.strokeStyle='#5d3a1a';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(18,-5);ctx.lineTo(22,-55);ctx.stroke();
+// Crystal orb on staff
+ctx.shadowColor='#00ffff';ctx.shadowBlur=8;
+ctx.fillStyle='#00e5ff';ctx.beginPath();ctx.arc(22,-58,5,0,Math.PI*2);ctx.fill();
+ctx.shadowBlur=0;
+ctx.fillStyle='rgba(255,255,255,0.5)';ctx.beginPath();ctx.arc(20,-60,2,0,Math.PI*2);ctx.fill();
+}
+die(){SoundFX.hit();particles.emit(this.x,this.y,'death',20);gameState.lives--;document.getElementById('lives').textContent=gameState.lives;if(gameState.lives<=0)gameOver();else this.respawn()}
+respawn(){this.x=100;this.y=200;this.vx=0;this.vy=0;this.isPowered=false;this.invincible=true;this.invincibleTimer=120;this.grounded=false}
+getBounds(){return{x:this.x-this.width/2,y:this.y-this.height,width:this.width,height:this.height}}
+}
+
+// ===== GAME OBJECTS =====
+class Crystal{
+constructor(x,y){this.x=x;this.y=y;this.collected=false;this.rotation=0;this.bobOffset=Math.random()*Math.PI*2}
+update(){this.rotation+=0.05}
+draw(ctx){
+if(this.collected)return;
+const bobY=Math.sin(Date.now()/200+this.bobOffset)*5;
+draw3DCrystal(ctx,this.x-gameState.camera.x,this.y-gameState.camera.y+bobY,1,this.rotation,Date.now())
+}
+getBounds(){return{x:this.x-12,y:this.y-12,width:24,height:24}}
+}
+
+class QuestionBlock{
+constructor(x,y,content){this.x=x;this.y=y;this.content=content;this.isEmpty=false;this.bounceY=0;this.bouncing=false}
+hit(){
+if(this.isEmpty||this.bouncing)return;
+this.bouncing=true;this.bounceY=-10;SoundFX.block();
+if(this.content==='crystal'){
+  gameState.coins+=3;gameState.score+=200;
+  document.getElementById('coins').textContent=gameState.coins;
+  document.getElementById('score').textContent=gameState.score;
+  SoundFX.coin();
+  particles.emit(this.x,this.y-20,'crystal',12);
+  FloatingText.spawn(this.x,this.y-30,'+3 \ud83d\udc8e','#00ffff',14);
+  ComboSystem.add();
+}
+else if(this.content==='power'){
+  // Spawn a rising power-up star
+  const pu=new PowerUp(this.x,this.y-40,'power');
+  pu.vy=-4; // pop upward
+  powerUps.push(pu);
+  SoundFX.powerup();
+  particles.emit(this.x,this.y-20,'magic',15);
+  FloatingText.spawn(this.x,this.y-40,'\u2b50 POWER!','#ffd700',18);
+}
+setTimeout(()=>{this.isEmpty=true},300)
+}
+update(){if(this.bouncing){this.bounceY+=1;if(this.bounceY>=0){this.bounceY=0;this.bouncing=false}}}
+draw(ctx){drawQuestionBlock(ctx,this.x-gameState.camera.x,this.y-gameState.camera.y+this.bounceY,this.isEmpty,1)}
+getBounds(){return{x:this.x-16,y:this.y-16,width:32,height:32}}
+}
+
+class PowerUp{
+constructor(x,y,type){this.x=x;this.y=y;this.type=type;this.vx=1.5;this.vy=0;this.active=true;this.spawnTime=Date.now()}
+update(){
+this.x+=this.vx;this.vy+=gameState.gravity*0.8;this.y+=this.vy;
+const groundY=getGroundY();
+if(this.y>groundY-12){this.y=groundY-12;this.vy=-3}
+}
+draw(ctx){
+if(!this.active)return;
+const screenX=this.x-gameState.camera.x,screenY=this.y-gameState.camera.y;
+const pulse=Math.sin(Date.now()/150)*0.15+1;
+ctx.save();ctx.translate(screenX,screenY);
+ctx.shadowColor='#ffd700';ctx.shadowBlur=10+Math.sin(Date.now()/200)*4;
+ctx.fillStyle='#ffd700';
+ctx.beginPath();
+for(let i=0;i<5;i++){
+const angle=i*Math.PI*2/5-Math.PI/2;
+const outerR=13*pulse;const innerR=5*pulse;
+ctx.lineTo(Math.cos(angle)*outerR,Math.sin(angle)*outerR);
+const midAngle=angle+Math.PI/5;
+ctx.lineTo(Math.cos(midAngle)*innerR,Math.sin(midAngle)*innerR);
+}
+ctx.closePath();ctx.fill();
+ctx.fillStyle='rgba(255,255,255,0.5)';
+ctx.beginPath();ctx.arc(-2,-3,3,0,Math.PI*2);ctx.fill();
+ctx.shadowBlur=0;ctx.restore()
+}
+getBounds(){return{x:this.x-12,y:this.y-12,width:24,height:24}}
+}
+
+class Enemy{
+constructor(x,y,type){this.x=x;this.y=y;this.type=type;this.vx=-1;this.vy=0;this.isDead=false;this.isStomped=false;this.width=30;this.height=30;this.patrolStart=x-100;this.patrolEnd=x+100}
+update(){
+if(this.isDead)return;
+this.x+=this.vx;this.vy+=gameState.gravity;this.y+=this.vy;
+if(this.x<this.patrolStart||this.x>this.patrolEnd)this.vx*=-1;
+const groundY=getGroundY();
+if(this.y>groundY-18){this.y=groundY-18;this.vy=0}
+}
+draw(ctx){if(this.isDead)return;drawGoomba(ctx,this.x-gameState.camera.x,this.y-gameState.camera.y,1,this.isStomped)}
+stomp(){this.isStomped=true;gameState.score+=100;document.getElementById('score').textContent=gameState.score;SoundFX.stomp();particles.emit(this.x,this.y,'death',10);setTimeout(()=>{this.isDead=true},500)}
+getBounds(){return{x:this.x-15,y:this.y-15,width:30,height:30}}
+}
+
+class MushroomHouse{
+constructor(x,y,type){this.x=x;this.y=y;this.type=type;this.visited=false}
+draw(ctx){drawMushroomHouse(ctx,this.x-gameState.camera.x,this.y-gameState.camera.y,this.type,1);if(this.visited){ctx.fillStyle='rgba(0,0,0,0.3)';ctx.fillRect(this.x-gameState.camera.x-50,this.y-gameState.camera.y-60,100,120)}}
+getBounds(){return{x:this.x-40,y:this.y-60,width:80,height:120}}
+interact(player){if(this.visited)return;this.visited=true;SoundFX.powerup();particles.emit(this.x,this.y-30,'magic',15);switch(this.type){case'red':gameState.lives++;document.getElementById('lives').textContent=gameState.lives;break;case'yellow':gameState.coins+=10;gameState.score+=1000;document.getElementById('coins').textContent=gameState.coins;document.getElementById('score').textContent=gameState.score;break;case'blue':player.isPowered=true;break}}
+}
+
+class Pipe{
+constructor(x,y,height,destination){this.x=x;this.y=y;this.height=height;this.destination=destination}
+draw(ctx){drawPipe(ctx,this.x-gameState.camera.x,this.y-gameState.camera.y,this.height,1)}
+getBounds(){return{x:this.x-20,y:this.y-this.height,width:40,height:this.height}}
+}
+
+// ===== LEVEL MANAGEMENT - FIXED GROUND =====
+let player,crystals=[],questionBlocks=[],enemies=[],mushroomHouses=[],pipes=[],powerUps=[],clouds=[],bushes=[],platforms=[],levelWidth=3000;
+
+function getGroundY(){return canvas.height-80}
+
+function generateLevel(levelNum){
+const config=LEVELS[levelNum]||LEVELS[1];levelWidth=config.width;gameState.gravity=config.gravity;gameState.time=config.time;
+player=new WizardPlayer(100,200);crystals=[];questionBlocks=[];enemies=[];mushroomHouses=[];pipes=[];powerUps=[];clouds=[];bushes=[];platforms=[];
+
+const groundY=getGroundY();
+const worldIdx=Math.floor((levelNum-1)/10); // 0-9
+const localLvl=((levelNum-1)%10)+1; // 1-10
+const diff=levelNum/100; // 0.01 to 1.0
+const theme=config.theme;
+
+// === GROUND GENERATION (unique per world) ===
+const groundSegments=60;
+const segWidth=levelWidth/groundSegments;
+const gapChance=getGapChance(worldIdx,localLvl);
+
+for(let i=0;i<groundSegments;i++){
+// First 5 and last 4 segments always solid (safe start/end)
+if(i<5||i>=groundSegments-4){platforms.push(new Platform(i*segWidth,groundY,segWidth+2,80,'normal'));continue}
+// World-specific gap patterns
+if(shouldHaveGap(i,worldIdx,localLvl,gapChance))continue;
+// Terrain height variation per world
+const yOffset=getTerrainOffset(i,worldIdx,localLvl);
+platforms.push(new Platform(i*segWidth,groundY+yOffset,segWidth+2,80-yOffset,'normal'));
+}
+
+// === FLOATING PLATFORMS (unique patterns per world) ===
+generateWorldPlatforms(worldIdx,localLvl,diff,groundY,config.width);
+
+// === CRYSTALS (placement varies by world) ===
+for(let i=0;i<config.crystalCount;i++){
+const cx=150+i*(config.width/config.crystalCount)+Math.random()*30;
+const cy=getCrystalHeight(i,worldIdx,localLvl,groundY);
+crystals.push(new Crystal(cx,cy));
+}
+
+// === QUESTION BLOCKS (height & density scales) ===
+const blockCount=6+Math.floor(localLvl*0.5);
+const blockSpacing=config.width/(blockCount+2);
+for(let i=1;i<=blockCount;i++){
+const bx=i*blockSpacing+Math.random()*30;
+const by=groundY-100-Math.random()*80-(worldIdx*5);
+const content=(i%3===0)?'power':'crystal';
+questionBlocks.push(new QuestionBlock(bx,by,content));
+}
+
+// === HOUSES (fewer in harder worlds) ===
+const houseCount=Math.max(1,config.houseTypes.length-Math.floor(worldIdx*0.3));
+const houseSpacing=config.width/(houseCount+1);
+for(let i=0;i<houseCount;i++){
+mushroomHouses.push(new MushroomHouse((i+1)*houseSpacing,groundY-20,config.houseTypes[i%config.houseTypes.length]));
+}
+
+// === PIPES (more in later worlds, taller) ===
+const pipeSpacing=config.width/(config.pipeCount+1);
+for(let i=1;i<=config.pipeCount;i++){
+const pipeH=50+Math.random()*60+worldIdx*8+localLvl*3;
+pipes.push(new Pipe(i*pipeSpacing+Math.random()*20,groundY,pipeH));
+}
+
+// === ENEMIES (more, faster in later levels) ===
+const enemySpacing=config.width/(config.enemyCount+1);
+for(let i=1;i<=config.enemyCount;i++){
+const e=new Enemy(i*enemySpacing+Math.random()*40,200);
+e.vx=-(1+diff*2+localLvl*0.1); // faster in later levels
+e.patrolStart=e.x-80-localLvl*10;
+e.patrolEnd=e.x+80+localLvl*10;
+enemies.push(e);
+}
+
+// === DECORATIONS (world-specific) ===
+const cloudCount=theme==='cave'||theme==='ocean'?5:(theme==='sky'?25:12);
+for(let i=0;i<cloudCount;i++)clouds.push({x:Math.random()*config.width,y:30+Math.random()*120,scale:0.4+Math.random()*0.6,speed:0.1+Math.random()*0.4});
+const bushCount=theme==='neon'||theme==='ocean'?8:18;
+for(let i=0;i<bushCount;i++)bushes.push({x:i*(config.width/bushCount)+Math.random()*40,y:groundY,scale:0.7+Math.random()*0.5});
+
+document.getElementById('levelIndicator').textContent='Level '+levelNum+': '+config.name;
+document.getElementById('time').textContent=gameState.time;
+document.getElementById('progressFill').style.width='0%';
+
+// === SHADOW FOREST SPECIAL LEVELS (51-60) ===
+if(worldIdx===5) generateShadowForestAdventure(localLvl,groundY,config.width);
+// === VOLCANO DUNGEON SPECIAL LEVELS (31-40) ===
+if(worldIdx===3) generateVolcanoAdventure(localLvl,groundY,config.width);
+// === FROZEN PEAKS SPECIAL LEVELS (41-50) ===
+if(worldIdx===4) generateIceAdventure(localLvl,groundY,config.width);
+// === OCEAN DEPTHS SPECIAL LEVELS (61-70) ===
+if(worldIdx===6) generateOceanAdventure(localLvl,groundY,config.width);
+// === DESERT RUINS SPECIAL LEVELS (71-80) ===
+if(worldIdx===7) generateDesertAdventure(localLvl,groundY,config.width);
+// === NEON CITY SPECIAL LEVELS (81-90) ===
+if(worldIdx===8) generateNeonAdventure(localLvl,groundY,config.width);
+// === WIZARD'S TOWER FINAL LEVELS (91-100) ===
+if(worldIdx===9) generateFinalAdventure(localLvl,groundY,config.width);
+}
+
+// ===== SHADOW FOREST: 10 UNIQUE ADVENTURE LEVELS =====
+function generateShadowForestAdventure(localLvl,groundY,levelW){
+// Each level has a unique twist/adventure mechanic
+switch(localLvl){
+case 1: // "The Foggy Entrance" - Dense ground, low visibility feeling, lots of bushes
+// Extra mushroom houses as safe havens scattered close together
+for(let i=0;i<5;i++)mushroomHouses.push(new MushroomHouse(400+i*600,groundY-20,['red','blue','yellow','orange','red'][i]));
+// Dense bush coverage for atmosphere
+for(let i=0;i<40;i++)bushes.push({x:i*(levelW/40)+Math.random()*20,y:groundY,scale:1.2+Math.random()*0.6});
+// Slow patrolling enemies in pairs
+for(let i=0;i<6;i++){const e=new Enemy(500+i*500,200);e.vx=-0.7;e.patrolStart=e.x-60;e.patrolEnd=e.x+60;enemies.push(e)}
+break;
+
+case 2: // "Treehouse Village" - Platforms are high up like treehouses connected by bridges
+platforms.length=platforms.filter(p=>p.y>=groundY-10).length?platforms.length:0;// keep ground
+// Treehouse platforms (high, wide, connected)
+for(let i=0;i<8;i++){
+const px=250+i*(levelW-400)/8;
+const py=groundY-180-Math.random()*40;
+platforms.push(new Platform(px,py,120+Math.random()*60,16,'floating'));
+// Bridge connectors between treehouses
+if(i>0)platforms.push(new Platform(px-80,py+10,80,10,'floating'));
+}
+// Crystals on treehouses
+for(let i=0;i<15;i++){const cx=300+i*(levelW/15);crystals.push(new Crystal(cx,groundY-200-Math.random()*30))}
+// Enemies on treehouse level
+for(let i=0;i<5;i++){const e=new Enemy(400+i*600,groundY-200);e.patrolStart=e.x-100;e.patrolEnd=e.x+100;enemies.push(e)}
+break;
+
+case 3: // "The Hollow Ravine" - Mostly gaps, platforming over void
+// Remove 50% of ground, force jumping
+for(let i=platforms.length-1;i>=0;i--){if(platforms[i].y>=groundY-10&&Math.random()<0.5&&platforms[i].x>200&&platforms[i].x<levelW-200)platforms.splice(i,1)}
+// Stepping stone platforms over the ravine
+for(let i=0;i<20;i++){
+const px=200+i*(levelW-400)/20;
+const py=groundY-40-Math.random()*30;
+platforms.push(new Platform(px,py,50+Math.random()*30,14,'floating'));
+}
+// Crystals reward risky jumps
+for(let i=0;i<20;i++){crystals.push(new Crystal(250+i*(levelW/20),groundY-80-Math.random()*50))}
+// Enemies guard platforms
+for(let i=0;i<8;i++){const e=new Enemy(300+i*450,200);e.vx=-1.5;e.patrolStart=e.x-50;e.patrolEnd=e.x+50;enemies.push(e)}
+break;
+
+case 4: // "Mushroom Bounce Path" - Question blocks everywhere, power-up heavy
+// Tons of question blocks at various heights
+for(let i=0;i<20;i++){
+const bx=200+i*(levelW-300)/20;
+const by=groundY-100-Math.random()*120;
+questionBlocks.push(new QuestionBlock(bx,by,i%3===0?'power':'crystal'));
+}
+// Low platforms for easy access
+for(let i=0;i<12;i++){
+platforms.push(new Platform(200+i*(levelW-300)/12,groundY-60-(i%2)*40,80,16,'floating'));
+}
+// Bonus house at center
+mushroomHouses.push(new MushroomHouse(levelW/2,groundY-20,'blue'));
+// Few slow enemies
+for(let i=0;i<4;i++){const e=new Enemy(600+i*700,200);e.vx=-0.8;enemies.push(e)}
+break;
+
+case 5: // "The Spider's Nest" - LOTS of enemies, tight spaces, survival gauntlet
+// Dense enemy waves
+for(let i=0;i<20;i++){
+const e=new Enemy(300+i*(levelW-400)/20,200);
+e.vx=-(1.5+Math.random()*0.5);
+e.patrolStart=e.x-40;e.patrolEnd=e.x+40;
+enemies.push(e);
+}
+// Narrow safe platforms between enemy groups
+for(let i=0;i<10;i++){
+platforms.push(new Platform(350+i*(levelW-500)/10,groundY-90,50,14,'floating'));
+}
+// Crystals on safe platforms only
+for(let i=0;i<10;i++){crystals.push(new Crystal(380+i*(levelW-500)/10,groundY-120))}
+// One life-saving house midway
+mushroomHouses.push(new MushroomHouse(levelW/2,groundY-20,'red'));
+break;
+
+case 6: // "Vertical Tower" - Mostly vertical climb, barely any ground
+// Remove most ground
+for(let i=platforms.length-1;i>=0;i--){if(platforms[i].y>=groundY-10&&platforms[i].x>300&&platforms[i].x<levelW-300)platforms.splice(i,1)}
+// Vertical staircase of small platforms
+for(let i=0;i<30;i++){
+const side=i%2===0?0:1;
+const px=300+side*(levelW-800)+Math.random()*200;
+const py=groundY-40-i*25;
+if(py<50)continue;
+platforms.push(new Platform(px,py,60+Math.random()*40,12,'floating'));
+// Crystal on every other step
+if(i%2===0)crystals.push(new Crystal(px+30,py-25));
+}
+// Enemies on platforms
+for(let i=0;i<6;i++){const e=new Enemy(400+Math.random()*(levelW-600),groundY-100-i*80);e.patrolStart=e.x-40;e.patrolEnd=e.x+40;enemies.push(e)}
+break;
+
+case 7: // "The Crystal Grove" - Crystal bonanza, collection focused
+// MASSIVE crystal count
+for(let i=0;i<60;i++){
+const cx=150+i*(levelW/60);
+const cy=groundY-30-Math.random()*200;
+crystals.push(new Crystal(cx,cy));
+}
+// Wide comfortable platforms to reach them
+for(let i=0;i<15;i++){
+platforms.push(new Platform(200+i*(levelW-300)/15,groundY-80-(i%3)*60,100+Math.random()*80,16,'floating'));
+}
+// Question blocks with power-ups
+for(let i=0;i<8;i++){questionBlocks.push(new QuestionBlock(300+i*(levelW/8),groundY-160,'power'))}
+// Minimal enemies - focus on collection
+for(let i=0;i<3;i++){const e=new Enemy(800+i*800,200);e.vx=-0.5;enemies.push(e)}
+break;
+
+case 8: // "Shadow Sprint" - Long level, fast enemies, time pressure
+// Extra long with few platforms - speed run
+for(let i=0;i<8;i++){
+platforms.push(new Platform(400+i*(levelW-600)/8,groundY-70,60,14,'floating'));
+}
+// Fast enemies everywhere
+for(let i=0;i<16;i++){
+const e=new Enemy(250+i*(levelW/16),200);
+e.vx=-(2+Math.random());
+e.patrolStart=e.x-120;e.patrolEnd=e.x+120;
+enemies.push(e);
+}
+// Pipes as obstacles
+for(let i=0;i<10;i++){pipes.push(new Pipe(300+i*(levelW/10),groundY,80+Math.random()*60))}
+// Sparse crystals - high value but risky
+for(let i=0;i<12;i++){crystals.push(new Crystal(400+i*(levelW/12),groundY-50-Math.random()*80))}
+break;
+
+case 9: // "The Ancient Ruins" - Puzzle-like, must find path through blocks and pipes
+// Maze of pipes at different heights
+for(let i=0;i<15;i++){
+const ph=60+i*8;
+pipes.push(new Pipe(200+i*(levelW-300)/15+Math.random()*30,groundY,ph));
+}
+// Platforms between pipes (stepping over)
+for(let i=0;i<12;i++){
+const px=250+i*(levelW-400)/12;
+const py=groundY-100-Math.random()*100;
+platforms.push(new Platform(px,py,70+Math.random()*40,14,'floating'));
+}
+// Question blocks hidden in the maze
+for(let i=0;i<10;i++){questionBlocks.push(new QuestionBlock(350+i*(levelW/10),groundY-150-Math.random()*60,i%2===0?'power':'crystal'))}
+// Guards
+for(let i=0;i<8;i++){const e=new Enemy(350+i*400,200);e.vx=-1.2;enemies.push(e)}
+// Reward house at the end
+mushroomHouses.push(new MushroomHouse(levelW-400,groundY-20,'yellow'));
+break;
+
+case 10: // "BOSS: The Shadow King" - Final level, extreme difficulty, gauntlet ending
+// Remove lots of ground for dramatic pits
+for(let i=platforms.length-1;i>=0;i--){if(platforms[i].y>=groundY-10&&Math.random()<0.35&&platforms[i].x>200&&platforms[i].x<levelW-200)platforms.splice(i,1)}
+// Small precision platforms
+for(let i=0;i<25;i++){
+const px=200+i*(levelW-400)/25;
+const py=groundY-50-(i%4)*50-Math.random()*30;
+platforms.push(new Platform(px,py,45+Math.random()*25,12,'floating'));
+}
+// Heavy enemy presence - the "boss army"
+for(let i=0;i<25;i++){
+const e=new Enemy(250+i*(levelW-400)/25,200);
+e.vx=-(2+Math.random()*1.5);
+e.patrolStart=e.x-60;e.patrolEnd=e.x+60;
+enemies.push(e);
+}
+// Scattered power-ups for survival
+for(let i=0;i<5;i++){questionBlocks.push(new QuestionBlock(400+i*(levelW/5),groundY-180,'power'))}
+// Victory crystals line the final stretch
+for(let i=0;i<30;i++){crystals.push(new Crystal(levelW-1000+i*30,groundY-100-Math.sin(i)*40))}
+// Final reward house
+mushroomHouses.push(new MushroomHouse(levelW-300,groundY-20,'blue'));
+break;
+}
+}
+
+// ===== VOLCANO DUNGEON: 10 UNIQUE ADVENTURE LEVELS (31-40) =====
+function generateVolcanoAdventure(localLvl, groundY, levelW) {
+switch(localLvl) {
+case 1: // "Lava Fields" - Intro, small gaps with lava below
+for(let i=0;i<6;i++){const e=new Enemy(400+i*500,200);e.vx=-1.2;enemies.push(e)}
+for(let i=0;i<8;i++){platforms.push(new Platform(200+i*(levelW-300)/8,groundY-80,90+Math.random()*40,16,'floating'))}
+for(let i=0;i<20;i++){crystals.push(new Crystal(250+i*(levelW/20),groundY-50-Math.random()*60))}
+break;
+case 2: // "Fire Bridge" - Narrow path, enemies rush from both sides
+for(let i=0;i<12;i++){platforms.push(new Platform(200+i*(levelW/12),groundY-50,50,14,'floating'))}
+for(let i=0;i<10;i++){const e=new Enemy(300+i*350,200);e.vx=i%2===0?-1.5:1.5;e.patrolStart=e.x-200;e.patrolEnd=e.x+200;enemies.push(e)}
+break;
+case 3: // "Eruption Run" - Long level, lots of pipes as obstacles
+for(let i=0;i<18;i++){pipes.push(new Pipe(200+i*(levelW/18),groundY,70+Math.random()*80))}
+for(let i=0;i<8;i++){const e=new Enemy(400+i*500,200);e.vx=-2;enemies.push(e)}
+for(let i=0;i<25;i++){crystals.push(new Crystal(200+i*(levelW/25),groundY-100-Math.random()*60))}
+break;
+case 4: // "Magma Platforms" - Tiny platforms over lava
+for(let i=platforms.length-1;i>=0;i--){if(platforms[i].y>=groundY-10&&platforms[i].x>250&&Math.random()<0.6)platforms.splice(i,1)}
+for(let i=0;i<22;i++){platforms.push(new Platform(200+i*(levelW-300)/22,groundY-30-Math.random()*20,40+Math.random()*20,12,'floating'))}
+for(let i=0;i<8;i++){const e=new Enemy(350+i*450,200);e.vx=-1.8;enemies.push(e)}
+break;
+case 5: // "Crater Climb" - Vertical ascent with falling blocks
+for(let i=0;i<15;i++){
+const px=200+Math.random()*(levelW-400);
+const py=groundY-50-i*40;if(py<60)continue;
+platforms.push(new Platform(px,py,60+Math.random()*50,14,'floating'));}
+for(let i=0;i<30;i++){crystals.push(new Crystal(200+i*(levelW/30),groundY-80-Math.random()*200))}
+break;
+case 6: // "The Furnace" - Dense enemies, power-up based survival
+for(let i=0;i<18;i++){const e=new Enemy(200+i*(levelW/18),200);e.vx=-(1.5+Math.random());enemies.push(e)}
+for(let i=0;i<12;i++){questionBlocks.push(new QuestionBlock(250+i*(levelW/12),groundY-130,'power'))}
+mushroomHouses.push(new MushroomHouse(levelW/2,groundY-20,'red'));
+break;
+case 7: // "Obsidian Caves" - Dark feeling, scattered platforms
+for(let i=0;i<18;i++){platforms.push(new Platform(Math.random()*(levelW-200)+100,groundY-60-Math.random()*180,50+Math.random()*70,14,'floating'))}
+for(let i=0;i<40;i++){crystals.push(new Crystal(150+i*(levelW/40),groundY-40-Math.random()*180))}
+for(let i=0;i<10;i++){const e=new Enemy(300+i*400,200);e.vx=-1.3;enemies.push(e)}
+break;
+case 8: // "Lava Sprint" - Speed run, minimal platforms
+for(let i=platforms.length-1;i>=0;i--){if(platforms[i].y>=groundY-10&&platforms[i].x>300&&Math.random()<0.4)platforms.splice(i,1)}
+for(let i=0;i<10;i++){platforms.push(new Platform(300+i*(levelW-400)/10,groundY-50,55,12,'floating'))}
+for(let i=0;i<12;i++){const e=new Enemy(300+i*350,200);e.vx=-2.5;enemies.push(e)}
+break;
+case 9: // "Dragon's Teeth" - Spike-like pipe maze
+for(let i=0;i<25;i++){pipes.push(new Pipe(150+i*(levelW/25),groundY,40+i*4))}
+for(let i=0;i<8;i++){platforms.push(new Platform(200+i*(levelW/8),groundY-120-Math.random()*60,80,14,'floating'))}
+for(let i=0;i<6;i++){const e=new Enemy(400+i*500,200);e.vx=-1.8;enemies.push(e)}
+break;
+case 10: // "BOSS: Volcano Heart" - Extreme gauntlet
+for(let i=platforms.length-1;i>=0;i--){if(platforms[i].y>=groundY-10&&Math.random()<0.4&&platforms[i].x>200)platforms.splice(i,1)}
+for(let i=0;i<20;i++){platforms.push(new Platform(200+i*(levelW/20),groundY-40-(i%5)*40,40+Math.random()*20,12,'floating'))}
+for(let i=0;i<22;i++){const e=new Enemy(200+i*(levelW/22),200);e.vx=-(2+Math.random()*1.5);e.patrolStart=e.x-50;e.patrolEnd=e.x+50;enemies.push(e)}
+for(let i=0;i<5;i++){questionBlocks.push(new QuestionBlock(300+i*(levelW/5),groundY-160,'power'))}
+break;
+}
+}
+
+// ===== FROZEN PEAKS: 10 UNIQUE LEVELS (41-50) =====
+function generateIceAdventure(localLvl, groundY, levelW) {
+switch(localLvl) {
+case 1: // "Snowfall Valley" - Wide platforms, gentle intro
+for(let i=0;i<10;i++){platforms.push(new Platform(200+i*(levelW-300)/10,groundY-80,130+Math.random()*50,16,'floating'))}
+for(let i=0;i<4;i++){const e=new Enemy(500+i*600,200);e.vx=-0.8;enemies.push(e)}
+for(let i=0;i<20;i++){crystals.push(new Crystal(200+i*(levelW/20),groundY-50-Math.random()*80))}
+break;
+case 2: // "Ice Slide" - Long thin platforms (slippery feel)
+for(let i=0;i<12;i++){platforms.push(new Platform(200+i*(levelW-300)/12,groundY-60-(i%3)*40,150,10,'floating'))}
+for(let i=0;i<6;i++){const e=new Enemy(400+i*500,200);e.vx=-1;enemies.push(e)}
+break;
+case 3: // "Frozen Lake" - Mostly flat but huge gaps (ice cracks)
+for(let i=platforms.length-1;i>=0;i--){if(platforms[i].y>=groundY-10&&platforms[i].x>300&&platforms[i].x<levelW-300&&Math.random()<0.35)platforms.splice(i,1)}
+for(let i=0;i<8;i++){platforms.push(new Platform(300+i*(levelW-400)/8,groundY-30,80,14,'floating'))}
+for(let i=0;i<30;i++){crystals.push(new Crystal(200+i*(levelW/30),groundY-60-Math.random()*50))}
+break;
+case 4: // "Blizzard" - Fast enemies, reduced visibility
+for(let i=0;i<14;i++){const e=new Enemy(200+i*(levelW/14),200);e.vx=-(1.5+Math.random());e.patrolStart=e.x-100;e.patrolEnd=e.x+100;enemies.push(e)}
+for(let i=0;i<10;i++){platforms.push(new Platform(250+i*(levelW/10),groundY-90,80,14,'floating'))}
+break;
+case 5: // "Icicle Cave" - Vertical drop platforms
+for(let i=0;i<20;i++){
+const px=200+i*(levelW-300)/20;
+const py=groundY-40-(i%4)*50;
+platforms.push(new Platform(px,py,55,12,'floating'));
+if(i%2===0)crystals.push(new Crystal(px+25,py-25));
+}
+for(let i=0;i<8;i++){const e=new Enemy(350+i*400,200);e.vx=-1.2;enemies.push(e)}
+break;
+case 6: // "Polar Express" - Speed run on ice
+for(let i=0;i<6;i++){platforms.push(new Platform(300+i*(levelW/6),groundY-50,200,12,'floating'))}
+for(let i=0;i<12;i++){const e=new Enemy(250+i*300,200);e.vx=-2;enemies.push(e)}
+for(let i=0;i<25;i++){crystals.push(new Crystal(200+i*(levelW/25),groundY-80))}
+break;
+case 7: // "Crystal Ice Cavern" - Collection paradise
+for(let i=0;i<50;i++){crystals.push(new Crystal(150+i*(levelW/50),groundY-30-Math.random()*180))}
+for(let i=0;i<15;i++){platforms.push(new Platform(200+i*(levelW/15),groundY-80-Math.random()*100,90,14,'floating'))}
+for(let i=0;i<3;i++){const e=new Enemy(600+i*800,200);e.vx=-0.7;enemies.push(e)}
+break;
+case 8: // "Avalanche" - Falling blocks everywhere
+for(let i=0;i<10;i++){platforms.push(new Platform(250+i*(levelW/10),groundY-100,70,14,'floating'))}
+for(let i=0;i<14;i++){const e=new Enemy(200+i*(levelW/14),200);e.vx=-1.8;enemies.push(e)}
+for(let i=0;i<8;i++){questionBlocks.push(new QuestionBlock(300+i*(levelW/8),groundY-150,'power'))}
+break;
+case 9: // "Frozen Fortress" - Pipe maze + enemies
+for(let i=0;i<16;i++){pipes.push(new Pipe(200+i*(levelW/16),groundY,50+i*5))}
+for(let i=0;i<12;i++){platforms.push(new Platform(250+i*(levelW/12),groundY-120,70,14,'floating'))}
+for(let i=0;i<10;i++){const e=new Enemy(300+i*400,200);e.vx=-1.5;enemies.push(e)}
+break;
+case 10: // "BOSS: Ice Titan" - Extreme
+for(let i=platforms.length-1;i>=0;i--){if(platforms[i].y>=groundY-10&&Math.random()<0.3&&platforms[i].x>200)platforms.splice(i,1)}
+for(let i=0;i<25;i++){platforms.push(new Platform(200+i*(levelW/25),groundY-40-(i%5)*35,40+Math.random()*25,12,'floating'))}
+for(let i=0;i<20;i++){const e=new Enemy(200+i*(levelW/20),200);e.vx=-(2+Math.random());enemies.push(e)}
+break;
+}
+}
+
+// ===== NEON CITY: 10 UNIQUE LEVELS (81-90) =====
+function generateNeonAdventure(localLvl, groundY, levelW) {
+switch(localLvl) {
+case 1: // "City Lights" - Grid platforms intro
+for(let i=0;i<12;i++){const col=i%4;const row=Math.floor(i/4);platforms.push(new Platform(200+col*180,groundY-80-row*70,70,14,'floating'))}
+for(let i=0;i<6;i++){const e=new Enemy(400+i*500,200);e.vx=-1.2;enemies.push(e)}
+for(let i=0;i<20;i++){crystals.push(new Crystal(200+i*(levelW/20),groundY-50-Math.random()*100))}
+break;
+case 2: // "Rooftop Chase" - High platforms, wide gaps
+for(let i=0;i<10;i++){platforms.push(new Platform(200+i*(levelW-300)/10,groundY-150-Math.random()*50,60+Math.random()*40,12,'floating'))}
+for(let i=0;i<10;i++){const e=new Enemy(300+i*400,groundY-170);e.patrolStart=e.x-50;e.patrolEnd=e.x+50;enemies.push(e)}
+break;
+case 3: // "Subway Tunnel" - Low ceiling feel, dense horizontal
+for(let i=0;i<20;i++){platforms.push(new Platform(150+i*(levelW/20),groundY-50,70,14,'floating'))}
+for(let i=0;i<15;i++){const e=new Enemy(200+i*(levelW/15),200);e.vx=-1.8;enemies.push(e)}
+for(let i=0;i<30;i++){crystals.push(new Crystal(200+i*(levelW/30),groundY-70))}
+break;
+case 4: // "Neon Signs" - Question blocks everywhere
+for(let i=0;i<25;i++){questionBlocks.push(new QuestionBlock(150+i*(levelW/25),groundY-100-Math.random()*100,i%4===0?'power':'crystal'))}
+for(let i=0;i<8;i++){platforms.push(new Platform(200+i*(levelW/8),groundY-60,80,14,'floating'))}
+break;
+case 5: // "Hackspace" - Precise grid jumps
+for(let i=0;i<30;i++){const col=i%6;const row=Math.floor(i/6);
+const px=200+col*120;const py=groundY-60-row*60;if(py<80)continue;
+platforms.push(new Platform(px,py,45,10,'floating'))}
+for(let i=0;i<12;i++){const e=new Enemy(250+i*350,200);e.vx=-2;enemies.push(e)}
+break;
+case 6: // "Data Stream" - Moving platform concept (static fast enemies)
+for(let i=0;i<8;i++){platforms.push(new Platform(300+i*(levelW-400)/8,groundY-80-(i%2)*60,100,14,'floating'))}
+for(let i=0;i<18;i++){const e=new Enemy(200+i*(levelW/18),200);e.vx=-(2+Math.random());e.patrolStart=e.x-150;e.patrolEnd=e.x+150;enemies.push(e)}
+break;
+case 7: // "Power Grid" - Power-up heavy, speed required
+for(let i=0;i<15;i++){questionBlocks.push(new QuestionBlock(200+i*(levelW/15),groundY-120,'power'))}
+for(let i=0;i<10;i++){const e=new Enemy(300+i*400,200);e.vx=-2.2;enemies.push(e)}
+for(let i=0;i<40;i++){crystals.push(new Crystal(150+i*(levelW/40),groundY-60-Math.random()*100))}
+break;
+case 8: // "Firewall" - Dense enemy wall, must spell through
+for(let i=0;i<25;i++){const e=new Enemy(200+i*(levelW/25),200);e.vx=-0.5;e.patrolStart=e.x-30;e.patrolEnd=e.x+30;enemies.push(e)}
+for(let i=0;i<10;i++){platforms.push(new Platform(250+i*(levelW/10),groundY-90,60,12,'floating'))}
+break;
+case 9: // "Server Room" - Pipe maze + tight platforming
+for(let i=0;i<20;i++){pipes.push(new Pipe(150+i*(levelW/20),groundY,40+Math.random()*80))}
+for(let i=0;i<15;i++){platforms.push(new Platform(200+i*(levelW/15),groundY-130,55,12,'floating'))}
+for(let i=0;i<12;i++){const e=new Enemy(250+i*350,200);e.vx=-1.5;enemies.push(e)}
+break;
+case 10: // "BOSS: The Virus" - Maximum difficulty
+for(let i=platforms.length-1;i>=0;i--){if(platforms[i].y>=groundY-10&&Math.random()<0.4&&platforms[i].x>200)platforms.splice(i,1)}
+for(let i=0;i<20;i++){platforms.push(new Platform(200+i*(levelW/20),groundY-40-(i%5)*40,35+Math.random()*20,10,'floating'))}
+for(let i=0;i<28;i++){const e=new Enemy(200+i*(levelW/28),200);e.vx=-(2.5+Math.random());enemies.push(e)}
+for(let i=0;i<6;i++){questionBlocks.push(new QuestionBlock(300+i*(levelW/6),groundY-170,'power'))}
+break;
+}
+}
+
+// ===== WIZARD'S TOWER: 10 UNIQUE LEVELS (91-100) =====
+function generateFinalAdventure(localLvl, groundY, levelW) {
+switch(localLvl) {
+case 1: // "Tower Base" - Spiral intro
+for(let i=0;i<15;i++){const angle=i*0.4;const px=250+i*(levelW-400)/15;const py=groundY-40-i*25;if(py<60)continue;platforms.push(new Platform(px,py,70,14,'floating'))}
+for(let i=0;i<8;i++){const e=new Enemy(300+i*400,200);e.vx=-1.5;enemies.push(e)}
+break;
+case 2: // "Enchanted Steps" - Staircase ascending
+for(let i=0;i<20;i++){platforms.push(new Platform(200+i*60,groundY-30-i*20,55,12,'floating'));if(i%3===0)crystals.push(new Crystal(220+i*60,groundY-60-i*20))}
+for(let i=0;i<8;i++){const e=new Enemy(400+i*500,200);e.vx=-1.8;enemies.push(e)}
+break;
+case 3: // "Magic Library" - Question block paradise
+for(let i=0;i<30;i++){questionBlocks.push(new QuestionBlock(150+i*(levelW/30),groundY-80-Math.random()*150,i%3===0?'power':'crystal'))}
+for(let i=0;i<10;i++){platforms.push(new Platform(200+i*(levelW/10),groundY-60,80,14,'floating'))}
+break;
+case 4: // "Guardian Hall" - Enemy gauntlet with power-ups
+for(let i=0;i<20;i++){const e=new Enemy(200+i*(levelW/20),200);e.vx=-(2+Math.random());enemies.push(e)}
+for(let i=0;i<10;i++){questionBlocks.push(new QuestionBlock(250+i*(levelW/10),groundY-140,'power'))}
+mushroomHouses.push(new MushroomHouse(levelW/2,groundY-20,'red'));
+break;
+case 5: // "Arcane Bridge" - Narrow path over void (keep start ground!)
+for(let i=platforms.length-1;i>=0;i--){if(platforms[i].y>=groundY-10&&platforms[i].x>400&&platforms[i].x<levelW-300&&Math.random()<0.55)platforms.splice(i,1)}
+for(let i=0;i<25;i++){platforms.push(new Platform(300+i*(levelW-500)/25,groundY-20,40+Math.random()*25,12,'floating'))}
+for(let i=0;i<12;i++){const e=new Enemy(400+i*350,200);e.vx=-1.5;enemies.push(e)}
+break;
+case 6: // "Crystal Chamber" - Massive collection
+for(let i=0;i<80;i++){crystals.push(new Crystal(100+i*(levelW/80),groundY-30-Math.random()*200))}
+for(let i=0;i<18;i++){platforms.push(new Platform(150+i*(levelW/18),groundY-80-Math.random()*100,80,14,'floating'))}
+break;
+case 7: // "Wizard Gauntlet" - Everything combined
+for(let i=0;i<15;i++){platforms.push(new Platform(200+i*(levelW/15),groundY-80-(i%3)*50,60,12,'floating'))}
+for(let i=0;i<15;i++){const e=new Enemy(250+i*(levelW/15),200);e.vx=-2;enemies.push(e)}
+for(let i=0;i<10;i++){questionBlocks.push(new QuestionBlock(250+i*(levelW/10),groundY-150,'power'))}
+for(let i=0;i<15;i++){pipes.push(new Pipe(200+i*(levelW/15),groundY,60+Math.random()*50))}
+break;
+case 8: // "The Void" - Barely any ground (keep start safe!)
+for(let i=platforms.length-1;i>=0;i--){if(platforms[i].y>=groundY-10&&platforms[i].x>500&&platforms[i].x<levelW-300&&Math.random()<0.65)platforms.splice(i,1)}
+for(let i=0;i<30;i++){platforms.push(new Platform(200+i*(levelW-300)/30,groundY-30-(i%6)*35,40+Math.random()*25,10,'floating'))}
+for(let i=0;i<20;i++){const e=new Enemy(400+i*(levelW-500)/20,200);e.vx=-(2+Math.random()*1.5);enemies.push(e)}
+break;
+case 9: // "Ascension" - Pure vertical climb
+// Add a safe starting platform
+platforms.push(new Platform(80,groundY-20,150,16,'floating'));
+for(let i=0;i<35;i++){const side=i%2;const px=200+(side?levelW*0.5:100)+Math.random()*150;const py=groundY-50-i*22;if(py<50||px>levelW-100)continue;platforms.push(new Platform(px,py,55+Math.random()*30,10,'floating'));if(i%3===0)crystals.push(new Crystal(px+25,py-20))}
+for(let i=0;i<10;i++){const ey=groundY-80-i*60;if(ey<80)continue;const e=new Enemy(300+Math.random()*(levelW-400),ey);enemies.push(e)}
+break;
+case 10: // "FINAL BOSS: The Dark Wizard" - Ultimate challenge (safe start!)
+for(let i=platforms.length-1;i>=0;i--){if(platforms[i].y>=groundY-10&&platforms[i].x>500&&platforms[i].x<levelW-300&&Math.random()<0.45)platforms.splice(i,1)}
+// Ensure safe start area
+platforms.push(new Platform(50,groundY,200,80,'normal'));
+for(let i=0;i<30;i++){platforms.push(new Platform(300+i*(levelW-500)/30,groundY-30-(i%7)*30,35+Math.random()*25,10,'floating'))}
+for(let i=0;i<30;i++){const e=new Enemy(400+i*(levelW-500)/30,200);e.vx=-(2.5+Math.random()*1.5);e.patrolStart=e.x-50;e.patrolEnd=e.x+50;enemies.push(e)}
+for(let i=0;i<8;i++){questionBlocks.push(new QuestionBlock(400+i*(levelW/8),groundY-180,'power'))}
+for(let i=0;i<50;i++){crystals.push(new Crystal(levelW-1500+i*30,groundY-80-Math.sin(i*0.3)*50))}
+mushroomHouses.push(new MushroomHouse(levelW-400,groundY-20,'blue'));
+break;
+}
+}
+
+// ===== OCEAN DEPTHS: 10 UNIQUE LEVELS (61-70) =====
+function generateOceanAdventure(localLvl, groundY, levelW) {
+switch(localLvl) {
+case 1: // "Shallow Reef" - Easy intro, lots of crystals
+for(let i=0;i<25;i++){crystals.push(new Crystal(150+i*(levelW/25),groundY-30-Math.random()*80))}
+for(let i=0;i<8;i++){platforms.push(new Platform(200+i*(levelW/8),groundY-70,100+Math.random()*50,16,'floating'))}
+for(let i=0;i<4;i++){const e=new Enemy(500+i*600,200);e.vx=-0.8;enemies.push(e)}
+break;
+case 2: // "Coral Maze" - Dense pipe obstacles
+for(let i=0;i<20;i++){pipes.push(new Pipe(150+i*(levelW/20),groundY,40+Math.random()*70))}
+for(let i=0;i<10;i++){platforms.push(new Platform(200+i*(levelW/10),groundY-100,70,14,'floating'))}
+for(let i=0;i<6;i++){const e=new Enemy(400+i*500,200);e.vx=-1.2;enemies.push(e)}
+break;
+case 3: // "Jellyfish Fields" - Lots of enemies, float-like platforms
+for(let i=0;i<16;i++){const e=new Enemy(200+i*(levelW/16),200);e.vx=-(0.5+Math.random()*0.8);e.patrolStart=e.x-60;e.patrolEnd=e.x+60;enemies.push(e)}
+for(let i=0;i<14;i++){platforms.push(new Platform(150+i*(levelW/14),groundY-80-Math.random()*80,80,12,'floating'))}
+break;
+case 4: // "Shipwreck Dive" - Scattered platforms, treasure (crystals) heavy
+for(let i=0;i<40;i++){crystals.push(new Crystal(100+i*(levelW/40),groundY-40-Math.random()*150))}
+for(let i=0;i<12;i++){platforms.push(new Platform(Math.random()*(levelW-200)+100,groundY-60-Math.random()*120,60+Math.random()*50,14,'floating'))}
+for(let i=0;i<8;i++){const e=new Enemy(300+i*450,200);e.vx=-1.3;enemies.push(e)}
+break;
+case 5: // "Underwater Caves" - Tight space, question blocks hidden
+for(let i=0;i<15;i++){questionBlocks.push(new QuestionBlock(200+i*(levelW/15),groundY-100-Math.random()*80,i%3===0?'power':'crystal'))}
+for(let i=0;i<10;i++){platforms.push(new Platform(200+i*(levelW/10),groundY-50,70,14,'floating'))}
+for(let i=0;i<10;i++){const e=new Enemy(300+i*400,200);e.vx=-1.5;enemies.push(e)}
+break;
+case 6: // "The Abyss" - Deep gaps, precision jumping
+for(let i=platforms.length-1;i>=0;i--){if(platforms[i].y>=groundY-10&&platforms[i].x>500&&platforms[i].x<levelW-400&&Math.random()<0.45)platforms.splice(i,1)}
+for(let i=0;i<20;i++){platforms.push(new Platform(300+i*(levelW-500)/20,groundY-30,45+Math.random()*25,12,'floating'))}
+for(let i=0;i<10;i++){const e=new Enemy(500+i*350,200);e.vx=-1.8;enemies.push(e)}
+break;
+case 7: // "Bubble Rise" - Vertical platforms going up
+for(let i=0;i<25;i++){const px=200+Math.random()*(levelW-400);const py=groundY-40-i*28;if(py<60)continue;platforms.push(new Platform(px,py,55+Math.random()*35,12,'floating'));if(i%2===0)crystals.push(new Crystal(px+25,py-20))}
+for(let i=0;i<8;i++){const e=new Enemy(300+i*500,200);e.vx=-1.2;enemies.push(e)}
+break;
+case 8: // "Current Rush" - Fast enemies, speed challenge
+for(let i=0;i<18;i++){const e=new Enemy(200+i*(levelW/18),200);e.vx=-(2.5+Math.random());e.patrolStart=e.x-150;e.patrolEnd=e.x+150;enemies.push(e)}
+for(let i=0;i<8;i++){platforms.push(new Platform(300+i*(levelW/8),groundY-70,80,14,'floating'))}
+for(let i=0;i<20;i++){crystals.push(new Crystal(200+i*(levelW/20),groundY-50))}
+break;
+case 9: // "Kraken's Lair" - Pre-boss, heavy obstacles
+for(let i=0;i<15;i++){pipes.push(new Pipe(200+i*(levelW/15),groundY,50+i*5))}
+for(let i=0;i<14;i++){const e=new Enemy(250+i*300,200);e.vx=-2;enemies.push(e)}
+for(let i=0;i<12;i++){platforms.push(new Platform(200+i*(levelW/12),groundY-110,60,12,'floating'))}
+for(let i=0;i<6;i++){questionBlocks.push(new QuestionBlock(300+i*(levelW/6),groundY-150,'power'))}
+break;
+case 10: // "BOSS: The Leviathan" - Ultimate ocean challenge
+for(let i=platforms.length-1;i>=0;i--){if(platforms[i].y>=groundY-10&&platforms[i].x>500&&Math.random()<0.4)platforms.splice(i,1)}
+platforms.push(new Platform(50,groundY,200,80,'normal'));
+for(let i=0;i<25;i++){platforms.push(new Platform(300+i*(levelW-500)/25,groundY-30-(i%5)*35,40+Math.random()*20,10,'floating'))}
+for(let i=0;i<24;i++){const e=new Enemy(400+i*(levelW-500)/24,200);e.vx=-(2+Math.random()*1.5);enemies.push(e)}
+for(let i=0;i<40;i++){crystals.push(new Crystal(levelW-1200+i*30,groundY-70-Math.sin(i*0.3)*40))}
+mushroomHouses.push(new MushroomHouse(levelW-350,groundY-20,'blue'));
+break;
+}
+}
+
+// ===== DESERT RUINS: 10 UNIQUE LEVELS (71-80) =====
+function generateDesertAdventure(localLvl, groundY, levelW) {
+switch(localLvl) {
+case 1: // "Sand Dunes" - Wide platforms, gentle intro
+for(let i=0;i<10;i++){platforms.push(new Platform(200+i*(levelW/10),groundY-60,120+Math.random()*60,16,'floating'))}
+for(let i=0;i<20;i++){crystals.push(new Crystal(200+i*(levelW/20),groundY-40-Math.random()*60))}
+for(let i=0;i<5;i++){const e=new Enemy(500+i*600,200);e.vx=-1;enemies.push(e)}
+break;
+case 2: // "Pyramid Steps" - Ascending step platforms
+for(let i=0;i<25;i++){const row=i%5;platforms.push(new Platform(200+i*(levelW-300)/25,groundY-30-row*40,60+Math.random()*30,14,'floating'))}
+for(let i=0;i<7;i++){const e=new Enemy(400+i*500,200);e.vx=-1.3;enemies.push(e)}
+for(let i=0;i<25;i++){crystals.push(new Crystal(200+i*(levelW/25),groundY-80-Math.random()*80))}
+break;
+case 3: // "Sandstorm" - Fast horizontal enemies (wind feel)
+for(let i=0;i<15;i++){const e=new Enemy(200+i*(levelW/15),200);e.vx=-(2+Math.random());e.patrolStart=e.x-200;e.patrolEnd=e.x+200;enemies.push(e)}
+for(let i=0;i<8;i++){platforms.push(new Platform(250+i*(levelW/8),groundY-80,80,14,'floating'))}
+mushroomHouses.push(new MushroomHouse(levelW/2,groundY-20,'red'));
+break;
+case 4: // "Oasis Rest" - Lots of houses and crystals, easy
+for(let i=0;i<6;i++){mushroomHouses.push(new MushroomHouse(300+i*(levelW-400)/6,groundY-20,['red','yellow','blue','orange','red','yellow'][i]))}
+for(let i=0;i<50;i++){crystals.push(new Crystal(100+i*(levelW/50),groundY-30-Math.random()*100))}
+for(let i=0;i<3;i++){const e=new Enemy(800+i*1000,200);e.vx=-0.5;enemies.push(e)}
+break;
+case 5: // "Quicksand Pits" - Lots of gaps
+for(let i=platforms.length-1;i>=0;i--){if(platforms[i].y>=groundY-10&&platforms[i].x>500&&platforms[i].x<levelW-400&&Math.random()<0.5)platforms.splice(i,1)}
+for(let i=0;i<18;i++){platforms.push(new Platform(300+i*(levelW-500)/18,groundY-25,50+Math.random()*30,12,'floating'))}
+for(let i=0;i<10;i++){const e=new Enemy(500+i*350,200);e.vx=-1.5;enemies.push(e)}
+break;
+case 6: // "Temple Interior" - Question blocks + platforms maze
+for(let i=0;i<20;i++){questionBlocks.push(new QuestionBlock(200+i*(levelW/20),groundY-90-Math.random()*100,i%4===0?'power':'crystal'))}
+for(let i=0;i<15;i++){platforms.push(new Platform(200+i*(levelW/15),groundY-60-(i%3)*50,70,14,'floating'))}
+for(let i=0;i<8;i++){const e=new Enemy(300+i*450,200);e.vx=-1.5;enemies.push(e)}
+break;
+case 7: // "Tomb Raider" - Dense pipe obstacles (pillars)
+for(let i=0;i<22;i++){pipes.push(new Pipe(150+i*(levelW/22),groundY,50+Math.random()*70))}
+for(let i=0;i<10;i++){platforms.push(new Platform(200+i*(levelW/10),groundY-120,70,14,'floating'))}
+for(let i=0;i<30;i++){crystals.push(new Crystal(200+i*(levelW/30),groundY-100-Math.random()*60))}
+break;
+case 8: // "Scorpion Valley" - Many fast enemies
+for(let i=0;i<20;i++){const e=new Enemy(200+i*(levelW/20),200);e.vx=-(2+Math.random()*0.5);e.patrolStart=e.x-80;e.patrolEnd=e.x+80;enemies.push(e)}
+for(let i=0;i<6;i++){platforms.push(new Platform(300+i*(levelW/6),groundY-80,90,14,'floating'))}
+for(let i=0;i<8;i++){questionBlocks.push(new QuestionBlock(350+i*(levelW/8),groundY-140,'power'))}
+break;
+case 9: // "Pharaoh's Curse" - Everything combined
+for(let i=0;i<12;i++){platforms.push(new Platform(200+i*(levelW/12),groundY-70-(i%3)*45,60,12,'floating'))}
+for(let i=0;i<14;i++){const e=new Enemy(250+i*300,200);e.vx=-1.8;enemies.push(e)}
+for(let i=0;i<12;i++){pipes.push(new Pipe(200+i*(levelW/12),groundY,50+i*4))}
+for(let i=0;i<10;i++){questionBlocks.push(new QuestionBlock(300+i*(levelW/10),groundY-140,'power'))}
+break;
+case 10: // "BOSS: The Sand King" - Extreme desert challenge
+for(let i=platforms.length-1;i>=0;i--){if(platforms[i].y>=groundY-10&&platforms[i].x>500&&Math.random()<0.4)platforms.splice(i,1)}
+platforms.push(new Platform(50,groundY,200,80,'normal'));
+for(let i=0;i<28;i++){platforms.push(new Platform(300+i*(levelW-500)/28,groundY-30-(i%6)*30,38+Math.random()*22,10,'floating'))}
+for(let i=0;i<26;i++){const e=new Enemy(400+i*(levelW-500)/26,200);e.vx=-(2.2+Math.random()*1.5);enemies.push(e)}
+for(let i=0;i<6;i++){questionBlocks.push(new QuestionBlock(400+i*(levelW/6),groundY-170,'power'))}
+for(let i=0;i<45;i++){crystals.push(new Crystal(levelW-1400+i*30,groundY-70-Math.sin(i*0.3)*45))}
+mushroomHouses.push(new MushroomHouse(levelW-400,groundY-20,'yellow'));
+break;
+}
+}
+
+// === WORLD-SPECIFIC HELPER FUNCTIONS ===
+
+function getGapChance(worldIdx,localLvl){
+// Each world has different gap frequency
+const base=[0,0.05,0.08,0.12,0.1,0.15,0.08,0.12,0.18,0.22];
+return base[worldIdx]+(localLvl*0.015);
+}
+
+function shouldHaveGap(segIdx,worldIdx,localLvl,chance){
+// Different worlds have different gap patterns
+if(worldIdx===0)return localLvl>5&&segIdx%12===7&&Math.random()<chance; // Mushroom: rare gaps
+if(worldIdx===1)return segIdx%8===4&&Math.random()<chance; // Caves: periodic
+if(worldIdx===2)return Math.random()<chance*1.5; // Sky: lots of gaps (floating feel)
+if(worldIdx===3)return segIdx%6===3&&Math.random()<chance; // Volcano: lava pits
+if(worldIdx===4)return segIdx%10===5&&Math.random()<chance*0.8; // Ice: moderate
+if(worldIdx===5)return Math.random()<chance; // Dark: random
+if(worldIdx===6)return segIdx%5===2&&Math.random()<chance; // Ocean: water gaps
+if(worldIdx===7)return segIdx%7===3&&Math.random()<chance*1.2; // Desert: quicksand
+if(worldIdx===8)return Math.random()<chance*1.3; // Neon: hard gaps
+if(worldIdx===9)return Math.random()<chance*1.5; // Final: extreme gaps
+return Math.random()<chance;
+}
+
+function getTerrainOffset(segIdx,worldIdx,localLvl){
+// World-specific height variation
+if(worldIdx===0)return 0; // Mushroom: flat friendly ground
+if(worldIdx===1)return Math.sin(segIdx*0.5)*8; // Caves: wavy
+if(worldIdx===2)return Math.sin(segIdx*0.3)*15; // Sky: rolling hills
+if(worldIdx===3)return Math.abs(Math.sin(segIdx*0.4))*12; // Volcano: jagged
+if(worldIdx===4)return Math.sin(segIdx*0.6)*6; // Ice: slight waves
+if(worldIdx===5)return Math.sin(segIdx*0.8)*10+Math.sin(segIdx*1.5)*5; // Dark: bumpy
+if(worldIdx===6)return Math.sin(segIdx*0.4)*18; // Ocean: big waves
+if(worldIdx===7)return Math.abs(Math.sin(segIdx*0.3))*14; // Desert: dunes
+if(worldIdx===8)return (segIdx%4)*4-6; // Neon: stepped
+if(worldIdx===9)return Math.sin(segIdx*0.7)*12+Math.cos(segIdx*1.2)*8; // Final: chaotic
+return 0;
+}
+
+function generateWorldPlatforms(worldIdx,localLvl,diff,groundY,levelW){
+const count=3+worldIdx*2+localLvl;
+
+if(worldIdx===0){
+// Mushroom: simple floating platforms, evenly spaced
+for(let i=0;i<count;i++){
+const px=250+i*(levelW-400)/count;
+const py=groundY-110-(i%2)*60;
+platforms.push(new Platform(px,py,90+Math.random()*50,18,'floating'));
+}
+}else if(worldIdx===1){
+// Caves: staircase + hanging platforms
+for(let i=0;i<count;i++){
+const px=200+i*(levelW-300)/count;
+const py=groundY-80-((i%4)*50);
+const pw=60+Math.random()*80;
+platforms.push(new Platform(px,py,pw,16,'floating'));
+}
+}else if(worldIdx===2){
+// Sky: scattered high platforms, big gaps between
+for(let i=0;i<count;i++){
+const px=180+i*(levelW-300)/count+Math.random()*60;
+const py=groundY-150-Math.random()*150;
+platforms.push(new Platform(px,py,70+Math.random()*100,14,'floating'));
+}
+}else if(worldIdx===3){
+// Volcano: narrow platforms over lava gaps
+for(let i=0;i<count;i++){
+const px=200+i*(levelW-300)/count;
+const py=groundY-90-(i%3)*70;
+platforms.push(new Platform(px,py,50+Math.random()*40,16,'floating'));
+}
+}else if(worldIdx===4){
+// Ice: slippery long thin platforms
+for(let i=0;i<count;i++){
+const px=200+i*(levelW-300)/count;
+const py=groundY-100-(i%3)*65;
+platforms.push(new Platform(px,py,120+Math.random()*60,12,'floating'));
+}
+}else if(worldIdx===5){
+// Shadow Forest: zigzag vertical climb
+for(let i=0;i<count;i++){
+const px=200+(i%2===0?i*40:levelW-400-i*40)%(levelW-300);
+const py=groundY-100-i*35;
+if(py<50)continue;
+platforms.push(new Platform(px,py,70+Math.random()*50,16,'floating'));
+}
+}else if(worldIdx===6){
+// Ocean: floating debris, irregular
+for(let i=0;i<count;i++){
+const px=150+Math.random()*(levelW-300);
+const py=groundY-80-Math.random()*180;
+platforms.push(new Platform(px,py,50+Math.random()*90,14,'floating'));
+}
+}else if(worldIdx===7){
+// Desert: pyramid steps
+for(let i=0;i<count;i++){
+const px=250+i*(levelW-400)/count;
+const row=i%5;
+const py=groundY-60-row*45;
+platforms.push(new Platform(px,py,80+Math.random()*40,18,'floating'));
+}
+}else if(worldIdx===8){
+// Neon: grid pattern, tight precise jumps
+for(let i=0;i<count;i++){
+const col=i%6;const row=Math.floor(i/6);
+const px=200+col*(levelW-400)/6;
+const py=groundY-100-row*80;
+if(py<60)continue;
+platforms.push(new Platform(px,py,55+Math.random()*30,14,'floating'));
+}
+}else{
+// Wizard's Tower: spiral upward
+for(let i=0;i<count;i++){
+const angle=i*0.6;
+const radius=levelW*0.3;
+const px=levelW/2+Math.cos(angle)*radius*(0.3+i*0.02);
+const py=groundY-60-i*30;
+if(py<50||px<100||px>levelW-100)continue;
+platforms.push(new Platform(px,py,60+Math.random()*40,14,'floating'));
+}
+}
+}
+
+function getCrystalHeight(idx,worldIdx,localLvl,groundY){
+const pattern=idx%5;
+if(worldIdx===0){
+// Mushroom: mostly ground level, easy
+return pattern<3?groundY-30:groundY-100-Math.random()*60;
+}else if(worldIdx===2||worldIdx===5){
+// Sky/Dark: lots of high crystals
+return groundY-80-Math.random()*200;
+}else if(worldIdx===9){
+// Final: scattered everywhere
+return groundY-50-Math.random()*250;
+}else{
+// Default progression
+if(pattern===0)return groundY-30;
+if(pattern===1)return groundY-80-localLvl*5;
+if(pattern===2)return groundY-140-Math.random()*60;
+if(pattern===3)return groundY-50;
+return groundY-180-Math.random()*80;
+}
+}
+
+// ===== COLLISION =====
+function checkCollision(r1,r2){
+return r1.x<r2.x+r2.width&&r1.x+r1.width>r2.x&&r1.y<r2.y+r2.height&&r1.y+r1.height>r2.y
+}
+
+function resolvePlatformCollision(player,platform){
+const pBounds=player.getBounds();
+const plBounds=platform.getBounds();
+
+if(!checkCollision(pBounds,plBounds))return false;
+
+const overlapLeft=(pBounds.x+pBounds.width)-plBounds.x;
+const overlapRight=(plBounds.x+plBounds.width)-pBounds.x;
+const overlapTop=(pBounds.y+pBounds.height)-plBounds.y;
+const overlapBottom=(plBounds.y+plBounds.height)-pBounds.y;
+
+const minOverlap=Math.min(overlapLeft,overlapRight,overlapTop,overlapBottom);
+
+if(minOverlap===overlapTop&&player.vy>=0){
+player.y=plBounds.y;
+player.vy=0;
+player.grounded=true;
+player.onPlatform=platform;
+return true
+}else if(minOverlap===overlapBottom&&player.vy<0){
+player.y=plBounds.y+plBounds.height+pBounds.height;
+player.vy=0;
+return true
+}else if(minOverlap===overlapLeft&&player.vx>0){
+player.x=plBounds.x-pBounds.width/2;
+player.vx=0;
+return true
+}else if(minOverlap===overlapRight&&player.vx<0){
+player.x=plBounds.x+plBounds.width+pBounds.width/2;
+player.vx=0;
+return true
+}
+return false
+}
+
+function handleCollisions(){
+const playerBounds=player.getBounds();
+const groundY=getGroundY();
+
+player.grounded=false;
+player.onPlatform=null;
+
+for(let platform of platforms){
+resolvePlatformCollision(player,platform)
+}
+
+for(let pipe of pipes){
+const pipeBounds=pipe.getBounds();
+if(checkCollision(playerBounds,pipeBounds)){
+const overlapTop=(playerBounds.y+playerBounds.height)-pipeBounds.y;
+if(player.vy>=0&&overlapTop<20){
+player.y=pipeBounds.y;
+player.vy=0;
+player.grounded=true
+}
+}
+}
+
+for(let block of questionBlocks){
+if(checkCollision(playerBounds,block.getBounds())){
+const blockBounds=block.getBounds();
+// Player head hits bottom of block (jumping up into it)
+const playerTop=playerBounds.y;
+const blockBottom=blockBounds.y+blockBounds.height;
+const hitFromBelow=player.vy<0&&playerTop<=blockBottom&&playerTop>blockBottom-20;
+if(hitFromBelow){
+block.hit();
+player.vy=3; // bounce player back down
+FloatingText.spawn(block.x, block.y-30, block.isEmpty?'':'POW!', '#ffd700', 16);
+ScreenShake.shake(2, 5);
+}else if(player.vy>=0){
+// Landing on top of block
+const overlapTop=(playerBounds.y+playerBounds.height)-blockBounds.y;
+if(overlapTop<15){
+player.y=blockBounds.y;
+player.vy=0;
+player.grounded=true;
+}
+}
+}
+}
+
+for(let crystal of crystals){
+if(!crystal.collected&&checkCollision(playerBounds,crystal.getBounds())){
+crystal.collected=true;gameState.coins++;gameState.totalCrystals++;gameState.score+=100;
+document.getElementById('coins').textContent=gameState.coins;
+document.getElementById('score').textContent=gameState.score;
+SoundFX.coin();particles.emit(crystal.x,crystal.y,'crystal',10)
+}
+}
+
+for(let enemy of enemies){
+if(!enemy.isDead&&checkCollision(playerBounds,enemy.getBounds())){
+if(player.vy>0&&player.y<enemy.y-10){enemy.stomp();player.vy=-8}
+else if(!player.invincible)player.die()
+}
+}
+
+for(let house of mushroomHouses){
+if(checkCollision(playerBounds,house.getBounds())){
+if(keys['ArrowDown']||keys['KeyS'])house.interact(player)
+}
+}
+
+for(let powerUp of powerUps){
+if(powerUp.active&&checkCollision(playerBounds,powerUp.getBounds())){
+powerUp.active=false;
+if(powerUp.type==='power'){player.isPowered=true;gameState.score+=1000;document.getElementById('score').textContent=gameState.score;SoundFX.powerup();particles.emit(powerUp.x,powerUp.y,'magic',15)}
+}
+}
+
+document.getElementById('progressFill').style.width=Math.min((player.x/levelWidth)*100,100)+'%';
+
+if(gameState.debug){
+document.getElementById('debugPanel').innerHTML='vx:'+player.vx.toFixed(1)+'<br>vy:'+player.vy.toFixed(1)+'<br>ground:'+(player.grounded?'Y':'N')+'<br>x:'+player.x.toFixed(0)+'<br>y:'+player.y.toFixed(0)+'<br>groundY:'+groundY
+}
+}
+
+function updateCamera(){
+const targetX=player.x-canvas.width/3;gameState.camera.x+=(targetX-gameState.camera.x)*0.1;
+if(gameState.camera.x<0)gameState.camera.x=0;if(gameState.camera.x>levelWidth-canvas.width)gameState.camera.x=levelWidth-canvas.width;
+const targetY=player.y-canvas.height/2;gameState.camera.y+=(targetY-gameState.camera.y)*0.1;
+if(gameState.camera.y<-200)gameState.camera.y=-200;if(gameState.camera.y>200)gameState.camera.y=200
+}
+
+// ===== FIXED BACKGROUND =====
+function drawBackground(){
+const config=LEVELS[gameState.currentLevel]||LEVELS[1];
+
+// FIXED: Always draw sky/gradient background, never black
+if(config.theme==='cave'){
+const gradient=ctx.createLinearGradient(0,0,0,canvas.height);
+gradient.addColorStop(0,'#2a0044');gradient.addColorStop(0.5,'#4a0080');gradient.addColorStop(1,'#1a0033');
+ctx.fillStyle=gradient;ctx.fillRect(0,0,canvas.width,canvas.height);
+for(let i=0;i<20;i++){
+const bx=(i*150-gameState.camera.x*0.1)%(canvas.width+100);
+const by=50+(i*37)%(canvas.height-100);
+ctx.fillStyle='rgba(0,255,255,0.15)';
+ctx.beginPath();ctx.arc(bx,by,20+Math.sin(Date.now()/500+i)*5,0,Math.PI*2);ctx.fill();
+ctx.fillStyle='rgba(0,255,255,0.3)';
+ctx.beginPath();ctx.arc(bx,by,8,0,Math.PI*2);ctx.fill()
+}
+}else if(config.theme==='sky'){
+const gradient=ctx.createLinearGradient(0,0,0,canvas.height);
+gradient.addColorStop(0,'#87CEEB');gradient.addColorStop(1,'#E0F6FF');
+ctx.fillStyle=gradient;ctx.fillRect(0,0,canvas.width,canvas.height);
+for(let i=0;i<10;i++){
+const ix=(i*200-gameState.camera.x*0.2)%(canvas.width+200)-100;
+const iy=100+(i*50)%200;
+ctx.fillStyle='rgba(144,238,144,0.3)';
+ctx.beginPath();ctx.ellipse(ix,iy,60,20,0,0,Math.PI*2);ctx.fill()
+}
+}else if(config.theme==='volcano'){
+const gradient=ctx.createLinearGradient(0,0,0,canvas.height);
+gradient.addColorStop(0,'#1a0505');gradient.addColorStop(0.3,'#3d0f0f');gradient.addColorStop(0.7,'#5c1a1a');gradient.addColorStop(1,'#2d0a0a');
+ctx.fillStyle=gradient;ctx.fillRect(0,0,canvas.width,canvas.height);
+for(let i=0;i<15;i++){
+const bx=(i*200-gameState.camera.x*0.15)%(canvas.width+100);
+const by=100+(i*47)%(canvas.height-200);
+ctx.fillStyle='rgba(255,69,0,'+(0.1+Math.sin(Date.now()/400+i)*0.05)+')';
+ctx.beginPath();ctx.arc(bx,by,15+Math.sin(Date.now()/300+i)*5,0,Math.PI*2);ctx.fill()
+}
+ctx.fillStyle='#1a0505';
+for(let i=0;i<5;i++){
+const vx=(i*400-gameState.camera.x*0.1)%(canvas.width+300)-150;
+ctx.beginPath();ctx.moveTo(vx,canvas.height);ctx.lineTo(vx+100,canvas.height-200);ctx.lineTo(vx+200,canvas.height);ctx.fill()
+}
+}else if(config.theme==='ice'){
+const gradient=ctx.createLinearGradient(0,0,0,canvas.height);
+gradient.addColorStop(0,'#a8d8ea');gradient.addColorStop(0.5,'#d4f1f9');gradient.addColorStop(1,'#e8f8ff');
+ctx.fillStyle=gradient;ctx.fillRect(0,0,canvas.width,canvas.height);
+for(let i=0;i<12;i++){const sx=(i*180-gameState.camera.x*0.05)%(canvas.width+100);ctx.fillStyle='rgba(255,255,255,0.5)';ctx.beginPath();ctx.arc(sx,50+i*20,2,0,Math.PI*2);ctx.fill()}
+}else if(config.theme==='dark'){
+const gradient=ctx.createLinearGradient(0,0,0,canvas.height);
+gradient.addColorStop(0,'#0a1a0a');gradient.addColorStop(0.5,'#0f2a0f');gradient.addColorStop(1,'#051005');
+ctx.fillStyle=gradient;ctx.fillRect(0,0,canvas.width,canvas.height);
+for(let i=0;i<10;i++){const fx=(i*200-gameState.camera.x*0.1)%(canvas.width+100);ctx.fillStyle='rgba(100,255,100,0.05)';ctx.beginPath();ctx.arc(fx,100+i*40,40,0,Math.PI*2);ctx.fill()}
+}else if(config.theme==='ocean'){
+const gradient=ctx.createLinearGradient(0,0,0,canvas.height);
+gradient.addColorStop(0,'#0a3d5c');gradient.addColorStop(0.5,'#0d5277');gradient.addColorStop(1,'#051e2f');
+ctx.fillStyle=gradient;ctx.fillRect(0,0,canvas.width,canvas.height);
+for(let i=0;i<15;i++){const bx=(i*120-gameState.camera.x*0.08+Date.now()*0.02)%(canvas.width+100);ctx.fillStyle='rgba(100,200,255,0.08)';ctx.beginPath();ctx.ellipse(bx,150+i*30,50,15,0,0,Math.PI*2);ctx.fill()}
+}else if(config.theme==='desert'){
+const gradient=ctx.createLinearGradient(0,0,0,canvas.height);
+gradient.addColorStop(0,'#f4a460');gradient.addColorStop(0.4,'#daa06d');gradient.addColorStop(1,'#c8860a');
+ctx.fillStyle=gradient;ctx.fillRect(0,0,canvas.width,canvas.height);
+ctx.fillStyle='#f5deb3';for(let i=0;i<5;i++){const dx=(i*400-gameState.camera.x*0.1)%(canvas.width+300)-150;ctx.beginPath();ctx.arc(dx,canvas.height-80,80+i*15,Math.PI,0);ctx.fill()}
+}else if(config.theme==='neon'){
+ctx.fillStyle='#0a0a1e';ctx.fillRect(0,0,canvas.width,canvas.height);
+for(let i=0;i<20;i++){const nx=(i*100-gameState.camera.x*0.1)%(canvas.width+100);ctx.strokeStyle='rgba(255,0,255,0.1)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(nx,0);ctx.lineTo(nx,canvas.height);ctx.stroke()}
+for(let i=0;i<10;i++){ctx.strokeStyle='rgba(0,255,255,0.08)';ctx.beginPath();ctx.moveTo(0,i*canvas.height/10);ctx.lineTo(canvas.width,i*canvas.height/10);ctx.stroke()}
+}else if(config.theme==='final'){
+const gradient=ctx.createLinearGradient(0,0,0,canvas.height);
+gradient.addColorStop(0,'#0a0025');gradient.addColorStop(0.5,'#1a0050');gradient.addColorStop(1,'#0a0025');
+ctx.fillStyle=gradient;ctx.fillRect(0,0,canvas.width,canvas.height);
+for(let i=0;i<25;i++){const sx=Math.sin(Date.now()*0.001+i)*canvas.width*0.4+canvas.width/2;const sy=(i*50+Date.now()*0.02)%canvas.height;ctx.fillStyle='rgba(255,215,0,'+(0.1+Math.sin(i)*0.05)+')';ctx.beginPath();ctx.arc(sx,sy,2,0,Math.PI*2);ctx.fill()}
+}else{
+// Forest theme
+const gradient=ctx.createLinearGradient(0,0,0,canvas.height);
+gradient.addColorStop(0,'#87CEEB');gradient.addColorStop(0.5,'#98FB98');gradient.addColorStop(1,'#90EE90');
+ctx.fillStyle=gradient;ctx.fillRect(0,0,canvas.width,canvas.height);
+for(let i=0;i<8;i++){
+const cx=(i*250-gameState.camera.x*0.1)%(canvas.width+200)-50;
+const cy=80+(i*30)%150;
+ctx.fillStyle='rgba(255,255,255,0.7)';
+ctx.beginPath();ctx.arc(cx,cy,30,0,Math.PI*2);ctx.arc(cx+25,cy-10,25,0,Math.PI*2);ctx.arc(cx+50,cy,30,0,Math.PI*2);ctx.fill();
+}
+}
+
+// Hills
+const hillColors={'volcano':'#3d1515','cave':'#6a00a0','ice':'#8bc4d4','dark':'#0a1a0a','ocean':'#0a3050','desert':'#b8863c','neon':'#1a1a2e','final':'#1a0040'};
+ctx.fillStyle=hillColors[config.theme]||'#90EE90';
+for(let i=0;i<10;i++){const hillX=(i*300-gameState.camera.x*0.2)%(canvas.width+300)-150;ctx.beginPath();ctx.arc(hillX,canvas.height-50,100+i*20,Math.PI,0);ctx.fill()}
+}
+
+function drawCloud(ctx,x,y,scale){
+const s=scale;ctx.save();ctx.translate(x,y);
+const config=LEVELS[gameState.currentLevel]||LEVELS[1];
+ctx.fillStyle=config.theme==='volcano'?'rgba(100,30,30,0.3)':(config.theme==='cave'?'rgba(150,100,200,0.3)':'#fff');
+[{x:0,y:0,r:25*s},{x:-20*s,y:5*s,r:20*s},{x:20*s,y:5*s,r:20*s},{x:-10*s,y:-10*s,r:18*s},{x:10*s,y:-10*s,r:18*s}].forEach(c=>{ctx.beginPath();ctx.arc(c.x,c.y,c.r,0,Math.PI*2);ctx.fill()});
+ctx.restore()
+}
+
+function drawBush(ctx,x,y,scale){
+const s=scale;ctx.save();ctx.translate(x,y);
+const config=LEVELS[gameState.currentLevel]||LEVELS[1];
+ctx.fillStyle=config.theme==='volcano'?'#4a1a1a':(config.theme==='cave'?'#2a4a2a':'#27ae60');
+[{x:0,y:0,r:20*s},{x:-15*s,y:5*s,r:15*s},{x:15*s,y:5*s,r:15*s},{x:-8*s,y:-10*s,r:15*s},{x:8*s,y:-10*s,r:15*s}].forEach(c=>{ctx.beginPath();ctx.arc(c.x,c.y,c.r,0,Math.PI*2);ctx.fill()});
+ctx.restore()
+}
+
+function draw(){
+ctx.clearRect(0,0,canvas.width,canvas.height);
+drawBackground();
+const config=LEVELS[gameState.currentLevel]||LEVELS[1];
+const groundY=getGroundY();
+for(let cloud of clouds){const screenX=cloud.x-gameState.camera.x*0.5;drawCloud(ctx,screenX,cloud.y,cloud.scale);cloud.x+=cloud.speed;if(cloud.x>levelWidth+100)cloud.x=-100}
+for(let bush of bushes){const screenX=bush.x-gameState.camera.x;if(screenX>-100&&screenX<canvas.width+100)drawBush(ctx,screenX,bush.y,bush.scale)}
+for(let platform of platforms)platform.draw(ctx);
+for(let pipe of pipes){const screenX=pipe.x-gameState.camera.x;if(screenX>-100&&screenX<canvas.width+100)pipe.draw(ctx)}
+for(let house of mushroomHouses){const screenX=house.x-gameState.camera.x;if(screenX>-150&&screenX<canvas.width+150)house.draw(ctx)}
+for(let block of questionBlocks){const screenX=block.x-gameState.camera.x;if(screenX>-50&&screenX<canvas.width+50)block.draw(ctx)}
+for(let crystal of crystals){const screenX=crystal.x-gameState.camera.x;if(screenX>-50&&screenX<canvas.width+50)crystal.draw(ctx)}
+for(let enemy of enemies){const screenX=enemy.x-gameState.camera.x;if(screenX>-100&&screenX<canvas.width+100)enemy.draw(ctx)}
+for(let powerUp of powerUps){const screenX=powerUp.x-gameState.camera.x;if(screenX>-50&&screenX<canvas.width+50)powerUp.draw(ctx)}
+particles.draw(ctx);player.draw(ctx);
+const flagX=levelWidth-200-gameState.camera.x;if(flagX>-50&&flagX<canvas.width+50){ctx.fillStyle='#8B4513';ctx.fillRect(flagX-2,100,4,groundY-100);ctx.fillStyle='#9b59b6';ctx.beginPath();ctx.moveTo(flagX,100);ctx.lineTo(flagX+40,120);ctx.lineTo(flagX,140);ctx.fill();ctx.fillStyle='#f1c40f';ctx.font='bold 20px Arial';ctx.fillText('★',flagX+15,125)}
+}
+
+// ===== GAME LOOP =====
+let timerInterval;
+function gameLoop(){
+if(!gameState.running||gameState.paused)return;
+player.update();
+for(let c of crystals)c.update();
+for(let b of questionBlocks)b.update();
+for(let e of enemies)e.update();
+for(let p of powerUps)p.update();
+particles.update();
+handleCollisions();
+updateCamera();
+draw();
+if(player.x>levelWidth-200)levelComplete();
+requestAnimationFrame(gameLoop)
+}
+
+function startTimer(){
+timerInterval=setInterval(()=>{
+if(gameState.running&&!gameState.paused&&gameState.time>0){
+gameState.time--;
+document.getElementById('time').textContent=gameState.time;
+if(gameState.time<=0)player.die()
+}
+},1000)
+}
+
+function togglePause(){
+if(!gameState.running)return;
+gameState.paused=!gameState.paused;
+document.getElementById('pauseMenu').style.display=gameState.paused?'flex':'none';
+if(!gameState.paused)requestAnimationFrame(gameLoop)
+}
+
+function levelComplete(){
+gameState.running=false;clearInterval(timerInterval);SoundFX.levelComplete();
+const timeBonus=gameState.time*10;gameState.score+=timeBonus;
+let stars=1;if(gameState.coins>=20)stars=2;if(gameState.coins>=30&&gameState.lives>=3)stars=3;
+gameState.levelScores[gameState.currentLevel]={score:gameState.score,stars:stars,crystals:gameState.coins};
+gameState.levelsCompleted=Math.max(gameState.levelsCompleted,gameState.currentLevel);
+gameState.maxUnlockedLevel=Math.max(gameState.maxUnlockedLevel,gameState.currentLevel+1);
+if(gameState.score>gameState.bestScore){
+gameState.bestScore=gameState.score;
+document.getElementById('menuBest').textContent=gameState.bestScore
+}
+document.getElementById('levelScore').textContent=gameState.score;
+document.getElementById('levelCrystals').textContent=gameState.coins;
+document.getElementById('timeBonus').textContent=timeBonus;
+document.getElementById('starRating').textContent='★'.repeat(stars);
+document.getElementById('levelCompleteScreen').style.display='flex';
+updateMenuStats()
+}
+
+function gameOver(){
+gameState.running=false;clearInterval(timerInterval);SoundFX.gameOver();
+document.getElementById('finalScore').textContent=gameState.score;
+document.getElementById('levelsCompleted').textContent=gameState.levelsCompleted;
+document.getElementById('totalCrystals').textContent=gameState.totalCrystals;
+document.getElementById('gameOverScreen').style.display='flex';
+updateMenuStats()
+}
+
+function updateMenuStats(){
+document.getElementById('menuCrystals').textContent=gameState.totalCrystals;
+document.getElementById('menuScore').textContent=gameState.score;
+document.getElementById('menuBest').textContent=gameState.bestScore
+}
+
+function showLevelSelect(){
+const tabs=document.getElementById('worldTabs');
+const mapArea=document.getElementById('levelMapArea');
+tabs.innerHTML='';mapArea.innerHTML='';
+
+// Build world tabs
+WORLDS.forEach((w,idx)=>{
+const tab=document.createElement('div');
+tab.className='ls-world-tab'+(idx===0?' active':'');
+tab.textContent=w.icon+' '+w.name;
+tab.addEventListener('click',()=>{
+document.querySelectorAll('.ls-world-tab').forEach(t=>t.classList.remove('active'));
+tab.classList.add('active');
+renderWorldLevels(idx);
+});
+tabs.appendChild(tab);
+});
+
+renderWorldLevels(0);
+document.getElementById('levelSelectScreen').style.display='flex';
+
+// Render level select background
+renderLevelSelectBg(0);
+}
+
+// World theme color palettes
+const WORLD_THEMES = [
+  {bg1:'#0a1a08',bg2:'#0d2a10',glow:'60,180,60',accent:'#4caf50',border:'80,200,80',card:'20,50,20',badge:'30,80,30',particle:'120,255,120'}, // Mushroom
+  {bg1:'#08082a',bg2:'#0a1040',glow:'0,140,200',accent:'#00bcd4',border:'0,180,220',card:'10,20,50',badge:'15,40,80',particle:'100,220,255'}, // Crystal
+  {bg1:'#0a1830',bg2:'#102848',glow:'100,180,255',accent:'#87ceeb',border:'120,200,255',card:'15,30,60',badge:'25,60,100',particle:'180,220,255'}, // Sky
+  {bg1:'#1a0505',bg2:'#2a0808',glow:'255,80,0',accent:'#ff5722',border:'255,100,30',card:'50,15,10',badge:'80,25,15',particle:'255,150,50'}, // Volcano
+  {bg1:'#081828',bg2:'#0a2838',glow:'150,220,255',accent:'#b3e5fc',border:'180,230,255',card:'10,30,50',badge:'20,60,90',particle:'200,240,255'}, // Ice
+  {bg1:'#050a05',bg2:'#081008',glow:'80,200,80',accent:'#66bb6a',border:'100,180,80',card:'10,25,10',badge:'20,50,20',particle:'100,220,80'}, // Shadow
+  {bg1:'#031520',bg2:'#052030',glow:'0,150,200',accent:'#0097a7',border:'0,180,180',card:'5,25,40',badge:'10,50,70',particle:'80,200,220'}, // Ocean
+  {bg1:'#1a1005',bg2:'#2a1a08',glow:'220,160,50',accent:'#ffa726',border:'220,180,80',card:'40,25,8',badge:'70,45,15',particle:'255,200,80'}, // Desert
+  {bg1:'#0a0520',bg2:'#150830',glow:'200,0,255',accent:'#e040fb',border:'220,80,255',card:'25,8,50',badge:'50,15,80',particle:'220,100,255'}, // Neon
+  {bg1:'#0a0025',bg2:'#150040',glow:'200,160,60',accent:'#ffd700',border:'220,180,80',card:'30,15,60',badge:'60,30,100',particle:'255,215,100'} // Final
+];
+
+function renderWorldLevels(worldIdx){
+const mapArea=document.getElementById('levelMapArea');
+mapArea.innerHTML='';
+const w=WORLDS[worldIdx];
+const t=WORLD_THEMES[worldIdx];
+const startLvl=worldIdx*10+1;
+const endLvl=startLvl+9;
+
+// World badge with unique theme
+const badge=document.createElement('div');
+badge.className='ls-world-badge';
+badge.style.background='linear-gradient(135deg,rgba('+t.badge+',0.7),rgba('+t.badge+',0.4))';
+badge.style.borderColor='rgba('+t.border+',0.5)';
+badge.style.boxShadow='0 4px 20px rgba('+t.glow+',0.15),inset 0 1px 0 rgba('+t.border+',0.1)';
+badge.innerHTML='<span class="ls-world-badge-icon">'+w.icon+'</span><span class="ls-world-badge-text" style="color:'+t.accent+'">World '+(worldIdx+1)+': '+w.name+'</span><span class="ls-world-badge-sub">Levels '+startLvl+'-'+endLvl+'</span>';
+mapArea.appendChild(badge);
+
+// Level nodes path
+const path=document.createElement('div');
+path.className='ls-path';
+
+for(let i=startLvl;i<=endLvl;i++){
+const node=document.createElement('div');
+const isUnlocked=i<=gameState.maxUnlockedLevel;
+const isCurrent=i===gameState.maxUnlockedLevel;
+const isLocked=i>gameState.maxUnlockedLevel;
+node.className='ls-node'+(isUnlocked&&!isCurrent?' unlocked':'')+(isCurrent?' current':'')+(isLocked?' locked':'');
+
+// Apply world-specific card colors
+const box=document.createElement('div');
+box.className='ls-node-box';
+if(!isLocked){
+  box.style.background='linear-gradient(160deg,rgba('+t.card+',0.9),rgba('+t.card+',0.6))';
+  box.style.borderColor=isCurrent?t.accent:'rgba('+t.border+',0.5)';
+  if(isCurrent)box.style.boxShadow='0 0 20px rgba('+t.glow+',0.4),0 5px 15px rgba(0,0,0,0.4)';
+  else box.style.boxShadow='0 4px 12px rgba(0,0,0,0.4),inset 0 1px 0 rgba('+t.border+',0.08)';
+}
+
+const levelData=gameState.levelScores[i];
+const stars=levelData?'\u2b50'.repeat(levelData.stars):'';
+const localNum=((i-1)%10)+1;
+
+let inner='';
+if(isLocked){inner+='<span class="ls-node-lock">\ud83d\udd12</span>'}
+else{inner+='<span class="ls-node-num" style="color:'+t.accent+'">'+localNum+'</span>'}
+if(stars)inner+='<div class="ls-node-stars">'+stars+'</div>';
+box.innerHTML=inner;
+
+const nameEl=document.createElement('div');
+nameEl.className='ls-node-name';
+nameEl.textContent=LEVELS[i].name;
+if(isCurrent)nameEl.style.color=t.accent;
+else if(isUnlocked)nameEl.style.color='rgba('+t.particle+',0.7)';
+
+node.appendChild(box);
+node.appendChild(nameEl);
+
+if(isUnlocked||isCurrent){
+node.addEventListener('click',()=>startLevel(i));
+}
+path.appendChild(node);
+}
+mapArea.appendChild(path);
+
+// Render themed background
+renderLevelSelectBg(worldIdx);
+}
+
+function renderLevelSelectBg(worldIdx){
+const lsBg=document.getElementById('levelSelectBg');
+if(!lsBg)return;
+const lsCtx=lsBg.getContext('2d');
+const W=container.clientWidth,H=container.clientHeight;
+lsBg.width=W;lsBg.height=H;
+const t=WORLD_THEMES[worldIdx]||WORLD_THEMES[0];
+
+// Base gradient unique per world
+const grad=lsCtx.createRadialGradient(W*0.5,H*0.3,30,W*0.5,H*0.5,W*0.85);
+grad.addColorStop(0,t.bg2);grad.addColorStop(0.5,t.bg1);grad.addColorStop(1,'#020204');
+lsCtx.fillStyle=grad;lsCtx.fillRect(0,0,W,H);
+
+// World-specific visual elements
+if(worldIdx===0){
+  // Mushroom: green forest, mushroom silhouettes
+  for(let i=0;i<8;i++){const mx=W*(0.05+i*0.12);const my=H*0.85;
+    lsCtx.fillStyle='rgba(60,30,10,0.3)';lsCtx.fillRect(mx-3,my,6,H-my);
+    lsCtx.fillStyle='rgba(180,60,60,0.15)';lsCtx.beginPath();lsCtx.arc(mx,my,20+Math.random()*15,Math.PI,0);lsCtx.fill();}
+  for(let i=0;i<15;i++){lsCtx.fillStyle='rgba(60,180,60,0.06)';lsCtx.beginPath();lsCtx.arc(Math.random()*W,H*0.7+Math.random()*H*0.3,30+Math.random()*40,0,Math.PI*2);lsCtx.fill();}
+} else if(worldIdx===1){
+  // Crystal Caves: crystals, purple/teal glow
+  for(let i=0;i<12;i++){const cx=Math.random()*W,cy=Math.random()*H;
+    lsCtx.fillStyle='rgba(0,200,220,0.08)';lsCtx.beginPath();lsCtx.moveTo(cx,cy-15);lsCtx.lineTo(cx+8,cy);lsCtx.lineTo(cx,cy+15);lsCtx.lineTo(cx-8,cy);lsCtx.closePath();lsCtx.fill();}
+  for(let i=0;i<6;i++){const ng=lsCtx.createRadialGradient(W*Math.random(),H*Math.random(),0,W*Math.random(),H*Math.random(),100);
+    ng.addColorStop(0,'rgba(100,0,200,0.1)');ng.addColorStop(1,'transparent');lsCtx.fillStyle=ng;lsCtx.fillRect(0,0,W,H);}
+} else if(worldIdx===2){
+  // Sky: clouds, light blue, sun rays
+  for(let i=0;i<10;i++){const cx=W*Math.random(),cy=H*0.2+Math.random()*H*0.3;
+    lsCtx.fillStyle='rgba(255,255,255,0.06)';lsCtx.beginPath();lsCtx.arc(cx,cy,35,0,Math.PI*2);lsCtx.arc(cx+25,cy-10,28,0,Math.PI*2);lsCtx.arc(cx+50,cy,32,0,Math.PI*2);lsCtx.fill();}
+  const sunG=lsCtx.createRadialGradient(W*0.8,H*0.1,10,W*0.8,H*0.1,150);sunG.addColorStop(0,'rgba(255,220,100,0.1)');sunG.addColorStop(1,'transparent');lsCtx.fillStyle=sunG;lsCtx.fillRect(0,0,W,H);
+} else if(worldIdx===3){
+  // Volcano: lava, embers, red glow
+  for(let i=0;i<20;i++){lsCtx.fillStyle='rgba(255,60,0,'+(0.03+Math.random()*0.05)+')';lsCtx.beginPath();lsCtx.arc(Math.random()*W,Math.random()*H,8+Math.random()*15,0,Math.PI*2);lsCtx.fill();}
+  lsCtx.fillStyle='rgba(255,40,0,0.05)';lsCtx.fillRect(0,H*0.8,W,H*0.2);
+  for(let i=0;i<4;i++){const vx=W*(0.15+i*0.25);lsCtx.fillStyle='rgba(30,5,0,0.4)';lsCtx.beginPath();lsCtx.moveTo(vx-60,H);lsCtx.lineTo(vx,H*0.6);lsCtx.lineTo(vx+60,H);lsCtx.fill();}
+} else if(worldIdx===4){
+  // Ice: snowflakes, white blue atmosphere
+  for(let i=0;i<50;i++){lsCtx.fillStyle='rgba(220,240,255,'+(0.1+Math.random()*0.2)+')';lsCtx.beginPath();lsCtx.arc(Math.random()*W,Math.random()*H,1+Math.random()*2,0,Math.PI*2);lsCtx.fill();}
+  for(let i=0;i<5;i++){const ig=lsCtx.createRadialGradient(W*Math.random(),H*Math.random(),0,W*Math.random(),H*Math.random(),120);ig.addColorStop(0,'rgba(180,220,255,0.06)');ig.addColorStop(1,'transparent');lsCtx.fillStyle=ig;lsCtx.fillRect(0,0,W,H);}
+} else if(worldIdx===5){
+  // Shadow Forest: dark trees, green mist
+  for(let i=0;i<12;i++){const tx=W*(i/12)+Math.random()*30;lsCtx.fillStyle='rgba(10,30,10,0.5)';lsCtx.fillRect(tx,H*0.4,4,H*0.6);
+    lsCtx.fillStyle='rgba(20,60,20,0.2)';lsCtx.beginPath();lsCtx.arc(tx,H*0.4,20+Math.random()*20,0,Math.PI*2);lsCtx.fill();}
+  for(let i=0;i<8;i++){const fg=lsCtx.createRadialGradient(W*Math.random(),H*0.7+Math.random()*H*0.3,0,W*Math.random(),H*0.8,100);fg.addColorStop(0,'rgba(50,150,50,0.06)');fg.addColorStop(1,'transparent');lsCtx.fillStyle=fg;lsCtx.fillRect(0,0,W,H);}
+} else if(worldIdx===6){
+  // Ocean: waves, bubbles, deep blue
+  for(let i=0;i<30;i++){lsCtx.fillStyle='rgba(100,200,255,'+(0.03+Math.random()*0.05)+')';lsCtx.beginPath();lsCtx.arc(Math.random()*W,Math.random()*H,3+Math.random()*8,0,Math.PI*2);lsCtx.fill();}
+  for(let i=0;i<5;i++){const wy=H*(0.3+i*0.15);lsCtx.strokeStyle='rgba(0,150,200,0.05)';lsCtx.lineWidth=2;lsCtx.beginPath();
+    for(let x=0;x<W;x+=10){lsCtx.lineTo(x,wy+Math.sin(x*0.02+i)*10);}lsCtx.stroke();}
+} else if(worldIdx===7){
+  // Desert: dunes, warm, sand texture
+  lsCtx.fillStyle='rgba(200,150,50,0.04)';lsCtx.fillRect(0,H*0.6,W,H*0.4);
+  for(let i=0;i<6;i++){const dx=W*(i/6);lsCtx.fillStyle='rgba(180,130,40,0.08)';lsCtx.beginPath();lsCtx.arc(dx+W*0.08,H*0.85,60+i*10,Math.PI,0);lsCtx.fill();}
+  const sunD=lsCtx.createRadialGradient(W*0.7,H*0.15,5,W*0.7,H*0.15,100);sunD.addColorStop(0,'rgba(255,200,50,0.08)');sunD.addColorStop(1,'transparent');lsCtx.fillStyle=sunD;lsCtx.fillRect(0,0,W,H);
+} else if(worldIdx===8){
+  // Neon: grid lines, neon glow
+  lsCtx.strokeStyle='rgba(255,0,255,0.04)';lsCtx.lineWidth=1;
+  for(let i=0;i<W;i+=40){lsCtx.beginPath();lsCtx.moveTo(i,0);lsCtx.lineTo(i,H);lsCtx.stroke();}
+  for(let i=0;i<H;i+=40){lsCtx.beginPath();lsCtx.moveTo(0,i);lsCtx.lineTo(W,i);lsCtx.stroke();}
+  for(let i=0;i<8;i++){const ng=lsCtx.createRadialGradient(W*Math.random(),H*Math.random(),0,W*Math.random(),H*Math.random(),80);ng.addColorStop(0,'rgba(200,0,255,0.08)');ng.addColorStop(1,'transparent');lsCtx.fillStyle=ng;lsCtx.fillRect(0,0,W,H);}
+} else if(worldIdx===9){
+  // Wizard's Tower: golden particles, mystical
+  for(let i=0;i<40;i++){lsCtx.fillStyle='rgba(255,215,0,'+(0.05+Math.random()*0.1)+')';lsCtx.beginPath();lsCtx.arc(Math.random()*W,Math.random()*H,1+Math.random()*2,0,Math.PI*2);lsCtx.fill();}
+  const tg=lsCtx.createRadialGradient(W*0.5,H*0.5,20,W*0.5,H*0.5,W*0.4);tg.addColorStop(0,'rgba(100,50,200,0.08)');tg.addColorStop(1,'transparent');lsCtx.fillStyle=tg;lsCtx.fillRect(0,0,W,H);
+  // Tower silhouette
+  lsCtx.fillStyle='rgba(20,10,40,0.4)';lsCtx.beginPath();lsCtx.moveTo(W*0.45,H);lsCtx.lineTo(W*0.48,H*0.3);lsCtx.lineTo(W*0.5,H*0.2);lsCtx.lineTo(W*0.52,H*0.3);lsCtx.lineTo(W*0.55,H);lsCtx.fill();
+}
+
+// Common: subtle border glow with world color
+lsCtx.strokeStyle='rgba('+t.border+',0.12)';lsCtx.lineWidth=2;
+lsCtx.strokeRect(6,6,W-12,H-12);
+
+// Scattered world-colored particles
+for(let i=0;i<30;i++){
+  lsCtx.fillStyle='rgba('+t.particle+','+(0.05+Math.random()*0.1)+')';
+  lsCtx.beginPath();lsCtx.arc(Math.random()*W,Math.random()*H,1+Math.random()*1.5,0,Math.PI*2);lsCtx.fill();
+}
+}
+
+function startLevel(levelNum){
+initAudio();
+gameState.currentLevel=levelNum;gameState.score=0;gameState.coins=0;gameState.lives=3;
+gameState.time=LEVELS[levelNum].time;gameState.running=true;gameState.paused=false;gameState.camera={x:0,y:0};
+document.getElementById('score').textContent='0';document.getElementById('coins').textContent='0';document.getElementById('lives').textContent='3';document.getElementById('time').textContent=gameState.time;
+document.getElementById('startScreen').classList.add('hidden');document.getElementById('levelSelectScreen').style.display='none';
+document.getElementById('levelCompleteScreen').style.display='none';document.getElementById('gameOverScreen').style.display='none';
+document.getElementById('pauseMenu').style.display='none';
+document.getElementById('settingsPanel').classList.remove('open');
+document.getElementById('howToPlayPanel').classList.remove('open');
+generateLevel(levelNum);startTimer();requestAnimationFrame(gameLoop)
+}
+
+// ===== MENU BAR EVENTS =====
+document.getElementById('menuPlay').addEventListener('click',()=>{
+if(!gameState.running)showLevelSelect();
+else togglePause()
+});
+document.getElementById('menuLevels').addEventListener('click',()=>{
+if(gameState.running){gameState.running=false;clearInterval(timerInterval)}
+showLevelSelect()
+});
+document.getElementById('menuSettings').addEventListener('click',()=>{
+document.getElementById('settingsPanel').classList.toggle('open');
+document.getElementById('howToPlayPanel').classList.remove('open');
+});
+document.getElementById('settingsClose').addEventListener('click',()=>{
+document.getElementById('settingsPanel').classList.remove('open');
+});
+
+// Settings toggles
+const gameSettings={sfx:true,volume:70,showFps:false,particles:true,screenShake:true};
+document.querySelectorAll('.setting-toggle').forEach(toggle=>{
+toggle.addEventListener('click',()=>{
+toggle.classList.toggle('on');
+const id=toggle.id;
+if(id==='toggleSfx')gameSettings.sfx=toggle.classList.contains('on');
+if(id==='toggleFps')gameSettings.showFps=toggle.classList.contains('on');
+if(id==='toggleParticles')gameSettings.particles=toggle.classList.contains('on');
+if(id==='toggleShake')gameSettings.screenShake=toggle.classList.contains('on');
+});
+});
+document.getElementById('volumeSlider').addEventListener('input',(e)=>{gameSettings.volume=parseInt(e.target.value)});
+document.getElementById('resetProgressBtn').addEventListener('click',()=>{
+if(confirm('Reset all progress? This cannot be undone.')){
+gameState.maxUnlockedLevel=1;gameState.levelScores={};gameState.bestScore=0;gameState.totalCrystals=0;gameState.levelsCompleted=0;
+updateMenuStats();
+}
+});
+
+document.getElementById('menuHelp').addEventListener('click',()=>{
+document.getElementById('howToPlayPanel').classList.toggle('open');
+document.getElementById('settingsPanel').classList.remove('open');
+});
+document.getElementById('htpClose').addEventListener('click',()=>{
+document.getElementById('howToPlayPanel').classList.remove('open');
+});
+
+// ===== ORIGINAL EVENTS =====
+document.getElementById('startBtn').addEventListener('click',()=>{initAudio();showLevelSelect()});
+document.getElementById('loadGameBtn').addEventListener('click',()=>{initAudio();showLevelSelect()});
+document.getElementById('startSettingsBtn').addEventListener('click',()=>{document.getElementById('settingsPanel').classList.toggle('open')});
+document.getElementById('nextLevelBtn').addEventListener('click',()=>{if(gameState.currentLevel<100)startLevel(gameState.currentLevel+1);else showLevelSelect()});
+document.getElementById('retryLevelBtn').addEventListener('click',()=>startLevel(gameState.currentLevel));
+document.getElementById('tryAgainBtn').addEventListener('click',()=>startLevel(gameState.currentLevel));
+document.getElementById('menuBtn').addEventListener('click',()=>{document.getElementById('gameOverScreen').style.display='none';document.getElementById('startScreen').classList.remove('hidden')});
+document.getElementById('resumeBtn').addEventListener('click',togglePause);
+document.getElementById('restartBtn').addEventListener('click',()=>{togglePause();startLevel(gameState.currentLevel)});
+document.getElementById('quitBtn').addEventListener('click',()=>{togglePause();document.getElementById('startScreen').classList.remove('hidden')});
+
+// ===== TITLE SCREEN ANIMATION =====
+const titleCanvas=document.getElementById('titleCanvas');
+const titleCtx=titleCanvas.getContext('2d');
+
+function resizeTitleCanvas(){
+titleCanvas.width=container.clientWidth;
+titleCanvas.height=container.clientHeight;
+}
+resizeTitleCanvas();
+window.addEventListener('resize',resizeTitleCanvas);
+
+let titleStars=[];
+for(let i=0;i<100;i++){
+titleStars.push({x:Math.random()*titleCanvas.width,y:Math.random()*titleCanvas.height,size:Math.random()*3,speed:Math.random()*0.5+0.1});
+}
+
+function drawTitleScreen(){
+if(gameState.running)return;
+
+// Cosmic dark nebula background
+const gradient=titleCtx.createLinearGradient(0,0,titleCanvas.width,titleCanvas.height);
+gradient.addColorStop(0,'#0a0520');
+gradient.addColorStop(0.3,'#0d1a3a');
+gradient.addColorStop(0.5,'#0a2a2a');
+gradient.addColorStop(0.7,'#0d1a3a');
+gradient.addColorStop(1,'#0a0520');
+titleCtx.fillStyle=gradient;
+titleCtx.fillRect(0,0,titleCanvas.width,titleCanvas.height);
+
+// Nebula clouds (teal + purple)
+const time=Date.now()*0.0003;
+for(let i=0;i<6;i++){
+const nx=titleCanvas.width*(0.2+i*0.15)+Math.sin(time+i)*30;
+const ny=titleCanvas.height*(0.3+Math.sin(time*0.7+i*0.8)*0.15);
+const nebGrad=titleCtx.createRadialGradient(nx,ny,0,nx,ny,120+i*20);
+const hue=i%2===0?'rgba(0,180,160,':'rgba(100,40,160,';
+nebGrad.addColorStop(0,hue+'0.12)');
+nebGrad.addColorStop(0.5,hue+'0.05)');
+nebGrad.addColorStop(1,'transparent');
+titleCtx.fillStyle=nebGrad;
+titleCtx.fillRect(0,0,titleCanvas.width,titleCanvas.height);
+}
+
+// Stars (multicolor, varying size)
+for(let star of titleStars){
+star.y+=star.speed*0.3;
+if(star.y>titleCanvas.height){star.y=0;star.x=Math.random()*titleCanvas.width}
+const flicker=0.5+Math.sin(Date.now()/300+star.x)*0.4;
+const colors=['255,255,255','200,220,255','255,200,100','150,255,200'];
+const c=colors[Math.floor(star.x)%colors.length];
+titleCtx.fillStyle='rgba('+c+','+flicker+')';
+titleCtx.beginPath();
+titleCtx.arc(star.x,star.y,star.size*0.8,0,Math.PI*2);
+titleCtx.fill();
+}
+
+// Floating crystal particles
+for(let i=0;i<8;i++){
+const px=titleCanvas.width*0.3+i*titleCanvas.width*0.05+Math.sin(Date.now()/800+i*2)*20;
+const py=titleCanvas.height*0.5+Math.cos(Date.now()/600+i*1.5)*15;
+titleCtx.fillStyle='rgba(0,230,255,'+(0.3+Math.sin(Date.now()/400+i)*0.2)+')';
+titleCtx.beginPath();
+// Diamond shape
+titleCtx.moveTo(px,py-4);titleCtx.lineTo(px+3,py);titleCtx.lineTo(px,py+4);titleCtx.lineTo(px-3,py);
+titleCtx.closePath();titleCtx.fill();
+}
+
+// Title: "WIZARD'S QUEST" with metallic/golden look
+const titleY=titleCanvas.height*0.28;
+titleCtx.textAlign='center';titleCtx.textBaseline='middle';
+
+// Title shadow
+titleCtx.fillStyle='rgba(0,0,0,0.5)';
+titleCtx.font='bold '+Math.min(titleCanvas.width*0.08,52)+'px "Trebuchet MS",serif';
+titleCtx.fillText("WIZARD'S QUEST",titleCanvas.width/2+2,titleY+3);
+
+// Title gradient fill
+const titleGrad=titleCtx.createLinearGradient(0,titleY-30,0,titleY+30);
+titleGrad.addColorStop(0,'#fff8dc');titleGrad.addColorStop(0.3,'#ffd700');titleGrad.addColorStop(0.5,'#ffaa00');titleGrad.addColorStop(0.7,'#ffd700');titleGrad.addColorStop(1,'#b8860b');
+titleCtx.fillStyle=titleGrad;
+titleCtx.font='bold '+Math.min(titleCanvas.width*0.08,52)+'px "Trebuchet MS",serif';
+titleCtx.fillText("WIZARD'S QUEST",titleCanvas.width/2,titleY);
+
+// Subtitle
+titleCtx.fillStyle='rgba(200,220,255,0.8)';
+titleCtx.font=Math.min(titleCanvas.width*0.035,20)+'px "Trebuchet MS",sans-serif';
+titleCtx.fillText('The Crystal Adventure',titleCanvas.width/2,titleY+45);
+
+// Wizard character (large, centered)
+const wizY=titleCanvas.height*0.58;
+const wizX=titleCanvas.width/2;
+// Glow circle behind wizard
+const glowGrad=titleCtx.createRadialGradient(wizX,wizY+20,10,wizX,wizY+20,80);
+glowGrad.addColorStop(0,'rgba(0,255,200,0.2)');glowGrad.addColorStop(1,'transparent');
+titleCtx.fillStyle=glowGrad;titleCtx.fillRect(wizX-100,wizY-60,200,160);
+
+// Draw wizard icon
+titleCtx.font=Math.min(titleCanvas.width*0.12,80)+'px Arial';
+titleCtx.fillText('\ud83e\uddd9',wizX,wizY);
+
+// Floating crystal shards around wizard
+for(let i=0;i<12;i++){
+const angle=Date.now()*0.001+i*(Math.PI*2/12);
+const dist=50+Math.sin(Date.now()/500+i)*15;
+const cx=wizX+Math.cos(angle)*dist;
+const cy=wizY+Math.sin(angle)*dist*0.6;
+const alpha=0.3+Math.sin(Date.now()/300+i*2)*0.2;
+titleCtx.fillStyle='rgba(0,220,255,'+alpha+')';
+titleCtx.beginPath();
+titleCtx.moveTo(cx,cy-3);titleCtx.lineTo(cx+2,cy);titleCtx.lineTo(cx,cy+3);titleCtx.lineTo(cx-2,cy);
+titleCtx.closePath();titleCtx.fill();
+}
+
+// Light streaks (diagonal, subtle)
+titleCtx.globalAlpha=0.03;
+titleCtx.strokeStyle='#ffd700';titleCtx.lineWidth=2;
+for(let i=0;i<5;i++){
+const sx=titleCanvas.width*0.1+i*titleCanvas.width*0.2;
+titleCtx.beginPath();titleCtx.moveTo(sx,0);titleCtx.lineTo(sx+titleCanvas.width*0.15,titleCanvas.height*0.5);titleCtx.stroke();
+}
+titleCtx.globalAlpha=1;
+
+// Magic orb glow at bottom
+const orbY=titleCanvas.height*0.82;
+const orbGrad=titleCtx.createRadialGradient(wizX,orbY,5,wizX,orbY,70);
+orbGrad.addColorStop(0,'rgba(0,255,150,0.35)');orbGrad.addColorStop(0.3,'rgba(0,200,100,0.15)');orbGrad.addColorStop(0.6,'rgba(0,150,80,0.05)');orbGrad.addColorStop(1,'transparent');
+titleCtx.fillStyle=orbGrad;titleCtx.beginPath();titleCtx.arc(wizX,orbY,70,0,Math.PI*2);titleCtx.fill();
+
+requestAnimationFrame(drawTitleScreen);
+}
+
+// Start title animation
+drawTitleScreen();
+
+// Initial background draw
+ctx.fillStyle='#0a0520';
+ctx.fillRect(0,0,canvas.width,canvas.height);
+ctx.fillStyle='rgba(200,220,255,0.6)';
+ctx.font='18px "Trebuchet MS",sans-serif';
+ctx.textAlign='center';
+ctx.fillText('Press START to play!',canvas.width/2,canvas.height/2);
+
+// === END OF BASE GAME — ADDICTIVE SYSTEMS BELOW ===
+
+// ============================================================
+// 1. SAVE/LOAD SYSTEM (LocalStorage persistence)
+// ============================================================
+const SaveSystem = {
+  key: 'wizards_quest_save_v2',
+  save() {
+    const data = {
+      maxUnlockedLevel: gameState.maxUnlockedLevel,
+      levelScores: gameState.levelScores,
+      bestScore: gameState.bestScore,
+      totalCrystals: gameState.totalCrystals,
+      levelsCompleted: gameState.levelsCompleted,
+      playerXP: PlayerProgression.xp,
+      playerLevel: PlayerProgression.level,
+      upgrades: ShopSystem.purchased,
+      achievements: AchievementSystem.unlocked,
+      skins: SkinSystem.owned,
+      activeSkin: SkinSystem.active,
+      streak: StreakSystem.currentStreak,
+      lastLogin: StreakSystem.lastLogin,
+      totalPlayTime: StatsTracker.totalPlayTime,
+      totalDeaths: StatsTracker.totalDeaths,
+      totalEnemiesKilled: StatsTracker.totalEnemiesKilled,
+      totalJumps: StatsTracker.totalJumps,
+      spellsCast: StatsTracker.spellsCast
+    };
+    try { localStorage.setItem(this.key, JSON.stringify(data)); } catch(e) {}
+  },
+  load() {
+    try {
+      const raw = localStorage.getItem(this.key);
+      if (!raw) return false;
+      const data = JSON.parse(raw);
+      gameState.maxUnlockedLevel = data.maxUnlockedLevel || 1;
+      gameState.levelScores = data.levelScores || {};
+      gameState.bestScore = data.bestScore || 0;
+      gameState.totalCrystals = data.totalCrystals || 0;
+      gameState.levelsCompleted = data.levelsCompleted || 0;
+      PlayerProgression.xp = data.playerXP || 0;
+      PlayerProgression.level = data.playerLevel || 1;
+      ShopSystem.purchased = data.upgrades || {};
+      AchievementSystem.unlocked = data.achievements || [];
+      SkinSystem.owned = data.skins || ['default'];
+      SkinSystem.active = data.activeSkin || 'default';
+      StreakSystem.currentStreak = data.streak || 0;
+      StreakSystem.lastLogin = data.lastLogin || null;
+      StatsTracker.totalPlayTime = data.totalPlayTime || 0;
+      StatsTracker.totalDeaths = data.totalDeaths || 0;
+      StatsTracker.totalEnemiesKilled = data.totalEnemiesKilled || 0;
+      StatsTracker.totalJumps = data.totalJumps || 0;
+      StatsTracker.spellsCast = data.spellsCast || 0;
+      updateMenuStats();
+      return true;
+    } catch(e) { return false; }
+  },
+  reset() {
+    localStorage.removeItem(this.key);
+  }
+};
+
+// ============================================================
+// 2. XP & PLAYER PROGRESSION SYSTEM
+// ============================================================
+const PlayerProgression = {
+  xp: 0,
+  level: 1,
+  xpPerLevel: 500,
+  getXPNeeded() { return this.level * this.xpPerLevel; },
+  addXP(amount) {
+    this.xp += amount;
+    while (this.xp >= this.getXPNeeded()) {
+      this.xp -= this.getXPNeeded();
+      this.level++;
+      this.onLevelUp();
+    }
+    SaveSystem.save();
+  },
+  onLevelUp() {
+    FloatingText.spawn(canvas.width/2, canvas.height/2, 'LEVEL UP! Lv.'+this.level, '#ffd700', 30);
+    SoundFX.powerup();
+    particles.emit(player.x, player.y, 'magic', 30);
+    // Bonus rewards per level
+    gameState.totalCrystals += this.level * 5;
+    NotificationSystem.show('\ud83c\udf1f Level Up! You are now Level ' + this.level, '#ffd700');
+  },
+  getProgress() { return this.xp / this.getXPNeeded(); }
+};
+
+// ============================================================
+// 3. COMBO SYSTEM (chain actions for multiplier)
+// ============================================================
+const ComboSystem = {
+  count: 0,
+  multiplier: 1,
+  timer: 0,
+  maxTime: 180, // 3 seconds at 60fps
+  add() {
+    this.count++;
+    this.timer = this.maxTime;
+    if (this.count >= 50) this.multiplier = 8;
+    else if (this.count >= 30) this.multiplier = 5;
+    else if (this.count >= 20) this.multiplier = 4;
+    else if (this.count >= 10) this.multiplier = 3;
+    else if (this.count >= 5) this.multiplier = 2;
+    else this.multiplier = 1;
+    if (this.count === 5) NotificationSystem.show('\ud83d\udd25 5x Combo!', '#ff6600');
+    if (this.count === 10) NotificationSystem.show('\ud83d\udd25\ud83d\udd25 10x COMBO!', '#ff3300');
+    if (this.count === 20) NotificationSystem.show('\u26a1 20x MEGA COMBO!', '#ff0066');
+    if (this.count === 50) NotificationSystem.show('\ud83d\udca5 50x ULTRA COMBO!!!', '#ff00ff');
+  },
+  update() {
+    if (this.timer > 0) { this.timer--; }
+    else { this.count = 0; this.multiplier = 1; }
+  },
+  getScore(base) { return base * this.multiplier; },
+  draw(ctx) {
+    if (this.multiplier <= 1) return;
+    const alpha = this.timer / this.maxTime;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = this.multiplier >= 5 ? '#ff00ff' : this.multiplier >= 3 ? '#ff6600' : '#ffd700';
+    ctx.font = 'bold 16px "Trebuchet MS"';
+    ctx.textAlign = 'right';
+    ctx.fillText('x' + this.multiplier + ' COMBO (' + this.count + ')', canvas.width - 15, 100);
+    ctx.restore();
+  }
+};
+
+// ============================================================
+// 4. SPELL CASTING SYSTEM (Wizard attacks!)
+// ============================================================
+class Spell {
+  constructor(x, y, direction) {
+    this.x = x; this.y = y;
+    this.vx = direction * 8;
+    this.vy = 0;
+    this.life = 60;
+    this.size = 8;
+    this.active = true;
+  }
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+    this.life--;
+    if (this.life <= 0) this.active = false;
+  }
+  draw(ctx) {
+    if (!this.active) return;
+    const sx = this.x - gameState.camera.x;
+    const sy = this.y - gameState.camera.y;
+    const alpha = this.life / 60;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.shadowColor = '#00ffff';
+    ctx.shadowBlur = 15;
+    ctx.fillStyle = '#00e5ff';
+    ctx.beginPath(); ctx.arc(sx, sy, this.size, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.8)';
+    ctx.beginPath(); ctx.arc(sx, sy, this.size * 0.4, 0, Math.PI * 2); ctx.fill();
+    // Trail particles
+    ctx.fillStyle = 'rgba(0,200,255,' + (alpha * 0.5) + ')';
+    for (let i = 1; i <= 3; i++) {
+      ctx.beginPath();
+      ctx.arc(sx - this.vx * i * 0.5, sy, this.size * (1 - i * 0.2), 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+    ctx.restore();
+  }
+  getBounds() { return {x: this.x - this.size, y: this.y - this.size, width: this.size * 2, height: this.size * 2}; }
+}
+
+const SpellSystem = {
+  spells: [],
+  cooldown: 0,
+  maxCooldown: 20,
+  cast() {
+    if (this.cooldown > 0 || !gameState.running || gameState.paused) return;
+    const dir = player.facingRight ? 1 : -1;
+    this.spells.push(new Spell(player.x + dir * 20, player.y - 30, dir));
+    this.cooldown = this.maxCooldown;
+    SoundFX.powerup();
+    particles.emit(player.x + dir * 20, player.y - 30, 'magic', 5);
+    StatsTracker.spellsCast++;
+  },
+  update() {
+    if (this.cooldown > 0) this.cooldown--;
+    for (let i = this.spells.length - 1; i >= 0; i--) {
+      this.spells[i].update();
+      if (!this.spells[i].active) { this.spells.splice(i, 1); continue; }
+      // Check spell-enemy collision
+      for (let enemy of enemies) {
+        if (enemy.isDead) continue;
+        if (checkCollision(this.spells[i].getBounds(), enemy.getBounds())) {
+          enemy.stomp();
+          this.spells[i].active = false;
+          ComboSystem.add();
+          PlayerProgression.addXP(15);
+          StatsTracker.totalEnemiesKilled++;
+          break;
+        }
+      }
+    }
+  },
+  draw(ctx) {
+    for (let spell of this.spells) spell.draw(ctx);
+  }
+};
+
+// Spell key binding (X key or tap action button)
+window.addEventListener('keydown', (e) => {
+  if (e.code === 'KeyX' || e.code === 'KeyF') SpellSystem.cast();
+});
+
+// ============================================================
+// 5. FLOATING TEXT SYSTEM (Score popups)
+// ============================================================
+const FloatingText = {
+  texts: [],
+  spawn(x, y, text, color, size) {
+    this.texts.push({x, y, text, color: color || '#ffd700', size: size || 14, life: 60, vy: -2});
+  },
+  update() {
+    for (let i = this.texts.length - 1; i >= 0; i--) {
+      const t = this.texts[i];
+      t.y += t.vy; t.vy *= 0.95; t.life--;
+      if (t.life <= 0) this.texts.splice(i, 1);
+    }
+  },
+  draw(ctx) {
+    for (const t of this.texts) {
+      ctx.save();
+      ctx.globalAlpha = t.life / 60;
+      ctx.fillStyle = t.color;
+      ctx.font = 'bold ' + t.size + 'px "Trebuchet MS"';
+      ctx.textAlign = 'center';
+      ctx.fillText(t.text, t.x - gameState.camera.x, t.y - gameState.camera.y);
+      ctx.restore();
+    }
+  }
+};
+
+// ============================================================
+// 6. NOTIFICATION SYSTEM (Toast messages)
+// ============================================================
+const NotificationSystem = {
+  queue: [],
+  current: null,
+  timer: 0,
+  show(text, color) {
+    this.queue.push({text, color: color || '#fff', duration: 180});
+  },
+  update() {
+    if (!this.current && this.queue.length > 0) {
+      this.current = this.queue.shift();
+      this.timer = this.current.duration;
+    }
+    if (this.current) {
+      this.timer--;
+      if (this.timer <= 0) this.current = null;
+    }
+  },
+  draw(ctx) {
+    if (!this.current) return;
+    const alpha = Math.min(1, this.timer / 30, (this.current.duration - this.timer + 30) / 30);
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    const tw = ctx.measureText(this.current.text).width || 200;
+    ctx.fillRect(canvas.width/2 - tw/2 - 20, 95, tw + 40, 30);
+    ctx.strokeStyle = this.current.color;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(canvas.width/2 - tw/2 - 20, 95, tw + 40, 30);
+    ctx.fillStyle = this.current.color;
+    ctx.font = 'bold 12px "Trebuchet MS"';
+    ctx.textAlign = 'center';
+    ctx.fillText(this.current.text, canvas.width/2, 114);
+    ctx.restore();
+  }
+};
+
+// ============================================================
+// 7. ACHIEVEMENT SYSTEM (50+ achievements)
+// ============================================================
+const AchievementSystem = {
+  unlocked: [],
+  definitions: [
+    {id:'first_crystal',name:'First Crystal',desc:'Collect your first crystal',icon:'\ud83d\udc8e',check:()=>gameState.totalCrystals>=1},
+    {id:'crystal_10',name:'Crystal Collector',desc:'Collect 10 crystals',icon:'\ud83d\udc8e',check:()=>gameState.totalCrystals>=10},
+    {id:'crystal_50',name:'Crystal Hunter',desc:'Collect 50 crystals',icon:'\ud83d\udc8e',check:()=>gameState.totalCrystals>=50},
+    {id:'crystal_200',name:'Crystal Master',desc:'Collect 200 crystals',icon:'\ud83d\udc8e',check:()=>gameState.totalCrystals>=200},
+    {id:'crystal_1000',name:'Crystal God',desc:'Collect 1000 crystals',icon:'\ud83d\udc8e',check:()=>gameState.totalCrystals>=1000},
+    {id:'level_5',name:'Getting Started',desc:'Complete 5 levels',icon:'\u2b50',check:()=>gameState.levelsCompleted>=5},
+    {id:'level_10',name:'Adventurer',desc:'Complete 10 levels',icon:'\u2b50',check:()=>gameState.levelsCompleted>=10},
+    {id:'level_25',name:'Hero',desc:'Complete 25 levels',icon:'\u2b50',check:()=>gameState.levelsCompleted>=25},
+    {id:'level_50',name:'Legend',desc:'Complete 50 levels',icon:'\u2b50',check:()=>gameState.levelsCompleted>=50},
+    {id:'level_100',name:'Wizard Master',desc:'Complete all 100 levels',icon:'\ud83d\uddc8',check:()=>gameState.levelsCompleted>=100},
+    {id:'score_1000',name:'Score Rookie',desc:'Get 1000 score',icon:'\ud83c\udfc6',check:()=>gameState.bestScore>=1000},
+    {id:'score_5000',name:'Score Pro',desc:'Get 5000 score',icon:'\ud83c\udfc6',check:()=>gameState.bestScore>=5000},
+    {id:'score_25000',name:'Score Legend',desc:'Get 25000 score',icon:'\ud83c\udfc6',check:()=>gameState.bestScore>=25000},
+    {id:'score_100k',name:'Score God',desc:'Get 100000 score',icon:'\ud83c\udfc6',check:()=>gameState.bestScore>=100000},
+    {id:'combo_5',name:'Combo Starter',desc:'Get a 5x combo',icon:'\ud83d\udd25',check:()=>ComboSystem.count>=5},
+    {id:'combo_10',name:'Combo King',desc:'Get a 10x combo',icon:'\ud83d\udd25',check:()=>ComboSystem.count>=10},
+    {id:'combo_20',name:'Combo Master',desc:'Get a 20x combo',icon:'\ud83d\udd25',check:()=>ComboSystem.count>=20},
+    {id:'combo_50',name:'ULTRA COMBO',desc:'Get a 50x combo',icon:'\u26a1',check:()=>ComboSystem.count>=50},
+    {id:'enemy_10',name:'Enemy Slayer',desc:'Defeat 10 enemies',icon:'\u2694',check:()=>StatsTracker.totalEnemiesKilled>=10},
+    {id:'enemy_50',name:'Warrior',desc:'Defeat 50 enemies',icon:'\u2694',check:()=>StatsTracker.totalEnemiesKilled>=50},
+    {id:'enemy_200',name:'Champion',desc:'Defeat 200 enemies',icon:'\u2694',check:()=>StatsTracker.totalEnemiesKilled>=200},
+    {id:'spell_10',name:'Apprentice',desc:'Cast 10 spells',icon:'\u2728',check:()=>StatsTracker.spellsCast>=10},
+    {id:'spell_100',name:'Sorcerer',desc:'Cast 100 spells',icon:'\u2728',check:()=>StatsTracker.spellsCast>=100},
+    {id:'spell_500',name:'Archmage',desc:'Cast 500 spells',icon:'\u2728',check:()=>StatsTracker.spellsCast>=500},
+    {id:'jump_100',name:'Bouncy',desc:'Jump 100 times',icon:'\ud83e\uddb6',check:()=>StatsTracker.totalJumps>=100},
+    {id:'jump_1000',name:'Sky Walker',desc:'Jump 1000 times',icon:'\ud83e\uddb6',check:()=>StatsTracker.totalJumps>=1000},
+    {id:'death_0',name:'Untouchable',desc:'Complete a level with no deaths',icon:'\ud83d\udee1',check:()=>StatsTracker.levelDeaths===0&&gameState.levelsCompleted>0},
+    {id:'speed_run',name:'Speed Demon',desc:'Complete a level with 50%+ time remaining',icon:'\u23f1',check:()=>gameState.time>gameState.maxTime*0.5},
+    {id:'plvl_5',name:'Growing Wizard',desc:'Reach player level 5',icon:'\ud83c\udf1f',check:()=>PlayerProgression.level>=5},
+    {id:'plvl_10',name:'Wise Wizard',desc:'Reach player level 10',icon:'\ud83c\udf1f',check:()=>PlayerProgression.level>=10},
+    {id:'plvl_25',name:'Grand Wizard',desc:'Reach player level 25',icon:'\ud83c\udf1f',check:()=>PlayerProgression.level>=25},
+    {id:'plvl_50',name:'Supreme Wizard',desc:'Reach player level 50',icon:'\ud83c\udf1f',check:()=>PlayerProgression.level>=50},
+    {id:'streak_3',name:'Loyal Player',desc:'3 day login streak',icon:'\ud83d\udcc5',check:()=>StreakSystem.currentStreak>=3},
+    {id:'streak_7',name:'Dedicated',desc:'7 day login streak',icon:'\ud83d\udcc5',check:()=>StreakSystem.currentStreak>=7},
+    {id:'streak_30',name:'Devoted',desc:'30 day login streak',icon:'\ud83d\udcc5',check:()=>StreakSystem.currentStreak>=30},
+    {id:'world_1',name:'Kingdom Cleared',desc:'Complete World 1',icon:'\ud83c\udf44',check:()=>gameState.maxUnlockedLevel>10},
+    {id:'world_2',name:'Cave Explorer',desc:'Complete World 2',icon:'\ud83d\udc8e',check:()=>gameState.maxUnlockedLevel>20},
+    {id:'world_3',name:'Sky Conqueror',desc:'Complete World 3',icon:'\u2601',check:()=>gameState.maxUnlockedLevel>30},
+    {id:'world_4',name:'Volcano Survivor',desc:'Complete World 4',icon:'\ud83c\udf0b',check:()=>gameState.maxUnlockedLevel>40},
+    {id:'world_5',name:'Ice Breaker',desc:'Complete World 5',icon:'\u2744',check:()=>gameState.maxUnlockedLevel>50},
+    {id:'world_6',name:'Shadow Slayer',desc:'Complete World 6',icon:'\ud83c\udf32',check:()=>gameState.maxUnlockedLevel>60},
+    {id:'world_7',name:'Deep Diver',desc:'Complete World 7',icon:'\ud83c\udf0a',check:()=>gameState.maxUnlockedLevel>70},
+    {id:'world_8',name:'Desert Wanderer',desc:'Complete World 8',icon:'\ud83c\udfdc',check:()=>gameState.maxUnlockedLevel>80},
+    {id:'world_9',name:'Neon Runner',desc:'Complete World 9',icon:'\ud83c\udf03',check:()=>gameState.maxUnlockedLevel>90},
+    {id:'world_10',name:'Tower Champion',desc:'Complete all worlds',icon:'\ud83d\uddfc',check:()=>gameState.maxUnlockedLevel>100},
+    {id:'shop_first',name:'First Purchase',desc:'Buy your first upgrade',icon:'\ud83d\udecf',check:()=>Object.keys(ShopSystem.purchased).length>=1},
+    {id:'rich',name:'Rich Wizard',desc:'Have 500+ total crystals',icon:'\ud83d\udcb0',check:()=>gameState.totalCrystals>=500},
+    {id:'play_1hr',name:'Marathon Gamer',desc:'Play for 1 hour total',icon:'\u23f0',check:()=>StatsTracker.totalPlayTime>=3600},
+    {id:'skin_collect',name:'Fashionista',desc:'Own 3 skins',icon:'\ud83c\udfa8',check:()=>SkinSystem.owned.length>=3}
+  ],
+  check() {
+    for (const ach of this.definitions) {
+      if (this.unlocked.includes(ach.id)) continue;
+      try {
+        if (ach.check()) {
+          this.unlocked.push(ach.id);
+          NotificationSystem.show(ach.icon + ' Achievement: ' + ach.name, '#ffd700');
+          SoundFX.levelComplete();
+          PlayerProgression.addXP(50);
+          gameState.totalCrystals += 10;
+          SaveSystem.save();
+        }
+      } catch(e) {}
+    }
+  }
+};
+
+// ============================================================
+// 8. SHOP / UPGRADE SYSTEM
+// ============================================================
+const ShopSystem = {
+  purchased: {},
+  items: [
+    {id:'speed1',name:'Swift Boots',desc:'+10% speed',cost:50,effect:()=>{player.speed=4.4}},
+    {id:'speed2',name:'Wind Boots',desc:'+20% speed',cost:150,effect:()=>{player.speed=4.8}},
+    {id:'jump1',name:'Spring Shoes',desc:'+10% jump',cost:60,effect:()=>{player.jumpForce=-13.2}},
+    {id:'jump2',name:'Cloud Boots',desc:'+20% jump',cost:200,effect:()=>{player.jumpForce=-14.4}},
+    {id:'magnet',name:'Crystal Magnet',desc:'Attract nearby crystals',cost:100,effect:()=>{ShopSystem.purchased.magnet=true}},
+    {id:'shield',name:'Magic Shield',desc:'Survive 1 hit',cost:120,effect:()=>{ShopSystem.purchased.shield=true}},
+    {id:'doubleJump',name:'Double Jump',desc:'Jump again mid-air',cost:250,effect:()=>{ShopSystem.purchased.doubleJump=true}},
+    {id:'spellCooldown',name:'Fast Cast',desc:'-30% spell cooldown',cost:80,effect:()=>{SpellSystem.maxCooldown=14}},
+    {id:'extraLife',name:'Extra Life',desc:'+1 starting life',cost:200,effect:()=>{gameState.lives=4}},
+    {id:'timeBonus',name:'Time Warp',desc:'+30s per level',cost:90,effect:()=>{ShopSystem.purchased.timeBonus=true}},
+    {id:'xpBoost',name:'XP Boost',desc:'+50% XP gain',cost:300,effect:()=>{ShopSystem.purchased.xpBoost=true}},
+    {id:'comboExtend',name:'Combo Time',desc:'+50% combo timer',cost:150,effect:()=>{ComboSystem.maxTime=270}}
+  ],
+  buy(itemId) {
+    const item = this.items.find(i => i.id === itemId);
+    if (!item || this.purchased[itemId]) return false;
+    if (gameState.totalCrystals < item.cost) return false;
+    gameState.totalCrystals -= item.cost;
+    this.purchased[itemId] = true;
+    item.effect();
+    NotificationSystem.show('\ud83d\uded2 Purchased: ' + item.name, '#5cb85c');
+    SaveSystem.save();
+    AchievementSystem.check();
+    return true;
+  },
+  applyAll() {
+    for (const item of this.items) {
+      if (this.purchased[item.id]) item.effect();
+    }
+  }
+};
+
+// ============================================================
+// 9. SKIN / HAT SYSTEM
+// ============================================================
+const SkinSystem = {
+  owned: ['default'],
+  active: 'default',
+  skins: [
+    {id:'default',name:'Classic Wizard',cost:0,robeColor:'#9b59b6',hatColor:'#9b59b6',staffColor:'#00ffff'},
+    {id:'fire',name:'Fire Mage',cost:100,robeColor:'#e74c3c',hatColor:'#c0392b',staffColor:'#ff6600'},
+    {id:'ice',name:'Ice Sorcerer',cost:100,robeColor:'#3498db',hatColor:'#2980b9',staffColor:'#87CEEB'},
+    {id:'dark',name:'Shadow Lord',cost:200,robeColor:'#2c3e50',hatColor:'#1a252f',staffColor:'#9b59b6'},
+    {id:'gold',name:'Golden Wizard',cost:300,robeColor:'#f39c12',hatColor:'#d68910',staffColor:'#ffd700'},
+    {id:'nature',name:'Forest Druid',cost:150,robeColor:'#27ae60',hatColor:'#1e8449',staffColor:'#2ecc71'},
+    {id:'neon',name:'Neon Caster',cost:250,robeColor:'#ff00ff',hatColor:'#cc00cc',staffColor:'#00ffff'},
+    {id:'cosmic',name:'Star Wizard',cost:500,robeColor:'#1a0050',hatColor:'#0d0025',staffColor:'#ffd700'}
+  ],
+  buy(skinId) {
+    const skin = this.skins.find(s => s.id === skinId);
+    if (!skin || this.owned.includes(skinId)) return false;
+    if (gameState.totalCrystals < skin.cost) return false;
+    gameState.totalCrystals -= skin.cost;
+    this.owned.push(skinId);
+    NotificationSystem.show('\ud83c\udfa8 Skin Unlocked: ' + skin.name, '#9b59b6');
+    SaveSystem.save();
+    AchievementSystem.check();
+    return true;
+  },
+  equip(skinId) {
+    if (!this.owned.includes(skinId)) return;
+    this.active = skinId;
+    SaveSystem.save();
+  },
+  getActive() {
+    return this.skins.find(s => s.id === this.active) || this.skins[0];
+  }
+};
+
+// ============================================================
+// 10. STREAK / DAILY LOGIN SYSTEM
+// ============================================================
+const StreakSystem = {
+  currentStreak: 0,
+  lastLogin: null,
+  rewards: [10, 20, 30, 50, 75, 100, 200],
+  checkLogin() {
+    const today = new Date().toDateString();
+    if (this.lastLogin === today) return;
+    const yesterday = new Date(Date.now() - 86400000).toDateString();
+    if (this.lastLogin === yesterday) {
+      this.currentStreak++;
+    } else if (this.lastLogin !== today) {
+      this.currentStreak = 1;
+    }
+    this.lastLogin = today;
+    const reward = this.rewards[Math.min(this.currentStreak - 1, this.rewards.length - 1)];
+    gameState.totalCrystals += reward;
+    NotificationSystem.show('\ud83d\udcc5 Day ' + this.currentStreak + ' Streak! +' + reward + ' crystals', '#5cb85c');
+    PlayerProgression.addXP(this.currentStreak * 10);
+    SaveSystem.save();
+    AchievementSystem.check();
+  }
+};
+
+// ============================================================
+// 11. STATS TRACKER
+// ============================================================
+const StatsTracker = {
+  totalPlayTime: 0,
+  totalDeaths: 0,
+  totalEnemiesKilled: 0,
+  totalJumps: 0,
+  spellsCast: 0,
+  levelDeaths: 0,
+  sessionStart: Date.now(),
+  update() {
+    this.totalPlayTime = Math.floor((Date.now() - this.sessionStart) / 1000);
+  }
+};
+
+// ============================================================
+// 12. SCREEN SHAKE
+// ============================================================
+const ScreenShake = {
+  intensity: 0,
+  duration: 0,
+  shake(intensity, duration) {
+    if (!gameSettings.screenShake) return;
+    this.intensity = intensity;
+    this.duration = duration;
+  },
+  update() {
+    if (this.duration > 0) this.duration--;
+    else this.intensity = 0;
+  },
+  getOffset() {
+    if (this.duration <= 0) return {x: 0, y: 0};
+    return {
+      x: (Math.random() - 0.5) * this.intensity * 2,
+      y: (Math.random() - 0.5) * this.intensity * 2
+    };
+  }
+};
+
+// ============================================================
+// 13. MOVING PLATFORMS
+// ============================================================
+class MovingPlatform {
+  constructor(x, y, width, range, speed, dir) {
+    this.x = x; this.y = y; this.width = width; this.height = 16;
+    this.startX = x; this.startY = y;
+    this.range = range; this.speed = speed;
+    this.dir = dir; // 'h' horizontal, 'v' vertical
+    this.timer = Math.random() * Math.PI * 2;
+  }
+  update() {
+    this.timer += this.speed;
+    if (this.dir === 'h') {
+      this.x = this.startX + Math.sin(this.timer) * this.range;
+    } else {
+      this.y = this.startY + Math.sin(this.timer) * this.range;
+    }
+  }
+  draw(ctx) {
+    const sx = this.x - gameState.camera.x;
+    const sy = this.y - gameState.camera.y;
+    if (sx + this.width < -50 || sx > canvas.width + 50) return;
+    ctx.save();
+    ctx.fillStyle = '#9b59b6';
+    ctx.fillRect(sx, sy, this.width, this.height);
+    ctx.fillStyle = 'rgba(255,255,255,0.2)';
+    ctx.fillRect(sx, sy, this.width, 4);
+    ctx.strokeStyle = 'rgba(155,89,182,0.6)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(sx, sy, this.width, this.height);
+    // Glow
+    ctx.shadowColor = '#9b59b6';
+    ctx.shadowBlur = 6;
+    ctx.fillStyle = 'rgba(155,89,182,0.3)';
+    ctx.fillRect(sx, sy, this.width, 2);
+    ctx.shadowBlur = 0;
+    ctx.restore();
+  }
+  getBounds() { return {x: this.x, y: this.y, width: this.width, height: this.height}; }
+}
+
+// ============================================================
+// 14. TRAPS (Spikes & Falling Blocks)
+// ============================================================
+class Spike {
+  constructor(x, y, width) {
+    this.x = x; this.y = y; this.width = width; this.height = 16;
+  }
+  draw(ctx) {
+    const sx = this.x - gameState.camera.x;
+    const sy = this.y - gameState.camera.y;
+    if (sx + this.width < -50 || sx > canvas.width + 50) return;
+    ctx.save();
+    ctx.fillStyle = '#c0392b';
+    for (let i = 0; i < this.width; i += 12) {
+      ctx.beginPath();
+      ctx.moveTo(sx + i, sy + this.height);
+      ctx.lineTo(sx + i + 6, sy);
+      ctx.lineTo(sx + i + 12, sy + this.height);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+  getBounds() { return {x: this.x, y: this.y, width: this.width, height: this.height}; }
+}
+
+class FallingBlock {
+  constructor(x, y) {
+    this.x = x; this.y = y; this.width = 40; this.height = 40;
+    this.originalY = y;
+    this.triggered = false; this.fallTimer = 0;
+    this.vy = 0; this.fallen = false;
+  }
+  trigger() {
+    if (this.triggered) return;
+    this.triggered = true;
+    this.fallTimer = 30; // shake for 30 frames then fall
+  }
+  update() {
+    if (!this.triggered) return;
+    if (this.fallTimer > 0) { this.fallTimer--; return; }
+    this.vy += 0.5;
+    this.y += this.vy;
+    if (this.y > getGroundY() + 200) this.fallen = true;
+  }
+  draw(ctx) {
+    if (this.fallen) return;
+    const sx = this.x - gameState.camera.x;
+    const sy = this.y - gameState.camera.y;
+    const shake = this.triggered && this.fallTimer > 0 ? (Math.random() - 0.5) * 4 : 0;
+    ctx.save();
+    ctx.fillStyle = '#7f8c8d';
+    ctx.fillRect(sx + shake, sy, this.width, this.height);
+    ctx.strokeStyle = '#5d6d6e';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(sx + shake, sy, this.width, this.height);
+    // Crack marks
+    ctx.strokeStyle = '#4a5859';
+    ctx.beginPath();
+    ctx.moveTo(sx + shake + 10, sy + 10);
+    ctx.lineTo(sx + shake + 20, sy + 20);
+    ctx.lineTo(sx + shake + 15, sy + 30);
+    ctx.stroke();
+    ctx.restore();
+  }
+  getBounds() { return {x: this.x, y: this.y, width: this.width, height: this.height}; }
+}
+
+// ============================================================
+// 15. COIN MAGNET EFFECT
+// ============================================================
+const MagnetEffect = {
+  range: 120,
+  active: false,
+  update() {
+    this.active = ShopSystem.purchased.magnet || false;
+    if (!this.active || !player) return;
+    for (let crystal of crystals) {
+      if (crystal.collected) continue;
+      const dx = player.x - crystal.x;
+      const dy = player.y - crystal.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < this.range) {
+        const force = (this.range - dist) / this.range * 3;
+        crystal.x += (dx / dist) * force;
+        crystal.y += (dy / dist) * force;
+      }
+    }
+  }
+};
+
+// ============================================================
+// 16. DOUBLE JUMP
+// ============================================================
+const DoubleJumpSystem = {
+  jumpsLeft: 0,
+  maxJumps: 2,
+  canDoubleJump() { return ShopSystem.purchased.doubleJump && this.jumpsLeft > 0; },
+  onJump() {
+    if (player.grounded) { this.jumpsLeft = this.maxJumps - 1; }
+    else if (this.canDoubleJump()) {
+      this.jumpsLeft--;
+      player.vy = player.jumpForce * 0.85;
+      SoundFX.jump();
+      particles.emit(player.x, player.y, 'jump', 8);
+      return true;
+    }
+    return false;
+  },
+  reset() { this.jumpsLeft = ShopSystem.purchased.doubleJump ? 1 : 0; }
+};
+
+// ============================================================
+// 17. DAILY CHALLENGE SYSTEM
+// ============================================================
+const DailyChallenge = {
+  challenges: [
+    {type:'collect',target:50,desc:'Collect 50 crystals today',reward:100},
+    {type:'kill',target:20,desc:'Defeat 20 enemies today',reward:80},
+    {type:'levels',target:3,desc:'Complete 3 levels today',reward:120},
+    {type:'combo',target:10,desc:'Get a 10x combo',reward:60},
+    {type:'spells',target:30,desc:'Cast 30 spells today',reward:70},
+    {type:'score',target:5000,desc:'Score 5000 points in one level',reward:90},
+    {type:'nodeath',target:1,desc:'Complete a level without dying',reward:150}
+  ],
+  todayChallenge: null,
+  progress: 0,
+  completed: false,
+  init() {
+    const dayIdx = Math.floor(Date.now() / 86400000) % this.challenges.length;
+    this.todayChallenge = this.challenges[dayIdx];
+    this.progress = 0;
+    this.completed = false;
+  },
+  addProgress(type, amount) {
+    if (this.completed || !this.todayChallenge) return;
+    if (this.todayChallenge.type === type) {
+      this.progress += amount;
+      if (this.progress >= this.todayChallenge.target) {
+        this.completed = true;
+        gameState.totalCrystals += this.todayChallenge.reward;
+        NotificationSystem.show('\ud83c\udf1f Daily Challenge Complete! +' + this.todayChallenge.reward + ' crystals', '#ffd700');
+        PlayerProgression.addXP(100);
+        SaveSystem.save();
+      }
+    }
+  }
+};
+
+// ============================================================
+// 18. BACKGROUND MUSIC (Simple looping chiptune)
+// ============================================================
+const MusicSystem = {
+  playing: false,
+  nodes: [],
+  start() {
+    if (!audioCtx || this.playing || !gameSettings.sfx) return;
+    this.playing = true;
+    this.playLoop();
+  },
+  stop() {
+    this.playing = false;
+    this.nodes.forEach(n => { try { n.stop(); } catch(e) {} });
+    this.nodes = [];
+  },
+  playLoop() {
+    if (!this.playing || !audioCtx || !sfxEnabled()) return;
+    const notes = [262, 294, 330, 349, 392, 349, 330, 294];
+    const duration = 0.25;
+    const vol = getVolume() * 0.15;
+    notes.forEach((freq, i) => {
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.connect(g); g.connect(audioCtx.destination);
+      o.type = 'triangle';
+      o.frequency.setValueAtTime(freq, audioCtx.currentTime + i * duration);
+      g.gain.setValueAtTime(vol, audioCtx.currentTime + i * duration);
+      g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + (i + 1) * duration);
+      o.start(audioCtx.currentTime + i * duration);
+      o.stop(audioCtx.currentTime + (i + 1) * duration);
+      this.nodes.push(o);
+    });
+    setTimeout(() => {
+      if (this.playing) this.playLoop();
+    }, notes.length * duration * 1000);
+  }
+};
+
+// ============================================================
+// 19. HOOK INTO GAME LOOP (integrate all new systems)
+// ============================================================
+const originalGameLoop = gameLoop;
+// Override game loop to include new systems
+const _oldDraw = draw;
+const _oldHandleCollisions = handleCollisions;
+
+// Patch draw function
+const patchedDraw = function() {
+  const shake = ScreenShake.getOffset();
+  if (shake.x || shake.y) {
+    ctx.save();
+    ctx.translate(shake.x, shake.y);
+  }
+  _oldDraw();
+  // Draw new systems
+  SpellSystem.draw(ctx);
+  FloatingText.draw(ctx);
+  ComboSystem.draw(ctx);
+  NotificationSystem.draw(ctx);
+  // XP bar
+  const xpProgress = PlayerProgression.getProgress();
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.fillRect(10, canvas.height - 20, 100, 6);
+  ctx.fillStyle = '#7c3aed';
+  ctx.fillRect(10, canvas.height - 20, xpProgress * 100, 6);
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.font = '8px "Trebuchet MS"';
+  ctx.textAlign = 'left';
+  ctx.fillText('Lv.' + PlayerProgression.level, 10, canvas.height - 24);
+  if (shake.x || shake.y) ctx.restore();
+};
+
+// Patch update loop
+const patchedUpdate = function() {
+  ComboSystem.update();
+  SpellSystem.update();
+  FloatingText.update();
+  NotificationSystem.update();
+  ScreenShake.update();
+  MagnetEffect.update();
+  StatsTracker.update();
+  // Check achievements periodically
+  if (Date.now() % 3000 < 50) AchievementSystem.check();
+};
+
+// Override the main gameLoop
+gameLoop = function() {
+  if (!gameState.running || gameState.paused) return;
+  player.update();
+  for (let c of crystals) c.update();
+  for (let b of questionBlocks) b.update();
+  for (let e of enemies) e.update();
+  for (let p of powerUps) p.update();
+  particles.update();
+  handleCollisions();
+  updateCamera();
+  patchedUpdate();
+  patchedDraw();
+  if (player.x > levelWidth - 200) levelComplete();
+  requestAnimationFrame(gameLoop);
+};
+
+// Patch crystal collection to use combo & XP
+const _origCrystalCollect = handleCollisions;
+
+// Hook into jump for stats tracking
+const _origPlayerUpdate = WizardPlayer.prototype.update;
+WizardPlayer.prototype.update = function() {
+  const wasGrounded = this.grounded;
+  _origPlayerUpdate.call(this);
+  if (wasGrounded && !this.grounded && this.vy < 0) {
+    StatsTracker.totalJumps++;
+    DoubleJumpSystem.reset();
+  }
+  // Double jump check
+  if ((keys['Space'] || keys['ArrowUp'] || keys['KeyW']) && !this.grounded && DoubleJumpSystem.canDoubleJump()) {
+    if (!this._djCooldown) {
+      DoubleJumpSystem.onJump();
+      this._djCooldown = true;
+    }
+  }
+  if (this.grounded) this._djCooldown = false;
+};
+
+// Hook into enemy stomp for combo
+const _origEnemyStomp = Enemy.prototype.stomp;
+Enemy.prototype.stomp = function() {
+  _origEnemyStomp.call(this);
+  ComboSystem.add();
+  StatsTracker.totalEnemiesKilled++;
+  PlayerProgression.addXP(20);
+  FloatingText.spawn(this.x, this.y - 20, '+' + ComboSystem.getScore(100), '#ffd700', 14);
+  ScreenShake.shake(3, 8);
+  DailyChallenge.addProgress('kill', 1);
+};
+
+// Hook into crystal collection for combo
+const _origHandleCollisionsFn = handleCollisions;
+handleCollisions = function() {
+  const prevCoins = gameState.coins;
+  _origHandleCollisionsFn();
+  const newCoins = gameState.coins - prevCoins;
+  if (newCoins > 0) {
+    ComboSystem.add();
+    PlayerProgression.addXP(5 * newCoins);
+    DailyChallenge.addProgress('collect', newCoins);
+  }
+};
+
+// Hook into level complete
+const _origLevelComplete = levelComplete;
+levelComplete = function() {
+  _origLevelComplete();
+  PlayerProgression.addXP(200 + gameState.currentLevel * 10);
+  DailyChallenge.addProgress('levels', 1);
+  if (gameState.lives >= 3) DailyChallenge.addProgress('nodeath', 1);
+  DailyChallenge.addProgress('score', gameState.score);
+  AchievementSystem.check();
+  SaveSystem.save();
+  MusicSystem.stop();
+};
+
+// Hook into game over
+const _origGameOver = gameOver;
+gameOver = function() {
+  _origGameOver();
+  StatsTracker.totalDeaths++;
+  SaveSystem.save();
+  MusicSystem.stop();
+};
+
+// Hook into player die for stats
+const _origDie = WizardPlayer.prototype.die;
+WizardPlayer.prototype.die = function() {
+  StatsTracker.levelDeaths++;
+  ScreenShake.shake(6, 15);
+  _origDie.call(this);
+};
+
+// Hook into startLevel for setup
+const _origStartLevel = startLevel;
+startLevel = function(levelNum) {
+  _origStartLevel(levelNum);
+  ShopSystem.applyAll();
+  SpellSystem.spells = [];
+  SpellSystem.cooldown = 0;
+  ComboSystem.count = 0;
+  ComboSystem.multiplier = 1;
+  StatsTracker.levelDeaths = 0;
+  DoubleJumpSystem.reset();
+  if (ShopSystem.purchased.timeBonus) gameState.time += 30;
+  if (ShopSystem.purchased.extraLife) gameState.lives = 4;
+  MusicSystem.start();
+  DailyChallenge.init();
+};
+
+// ============================================================
+// 20. INITIALIZATION - Load saved data on page load
+// ============================================================
+SaveSystem.load();
+StreakSystem.checkLogin();
+DailyChallenge.init();
+updateMenuStats();
+
+// Auto-save every 30 seconds
+setInterval(() => { if (gameState.running) SaveSystem.save(); }, 30000);
+
+// ============================================================
+// 21. CONTROLS HINT UPDATE (show spell key)
+// ============================================================
+document.getElementById('controls').innerHTML = '\u2190 \u2192 Move | SPACE Jump | X Spell | \u2193 House | P Pause';
+
+// ============================================================
+// 22. POWER-UP SHIELD SYSTEM
+// ============================================================
+const ShieldSystem = {
+  active: false,
+  hits: 0,
+  activate() {
+    if (!ShopSystem.purchased.shield) return;
+    this.active = true;
+    this.hits = 1;
+  },
+  absorb() {
+    if (!this.active || this.hits <= 0) return false;
+    this.hits--;
+    if (this.hits <= 0) this.active = false;
+    NotificationSystem.show('\ud83d\udee1 Shield Absorbed Hit!', '#3498db');
+    particles.emit(player.x, player.y, 'magic', 15);
+    ScreenShake.shake(4, 10);
+    return true;
+  },
+  draw(ctx) {
+    if (!this.active || !player) return;
+    const sx = player.x - gameState.camera.x;
+    const sy = player.y - gameState.camera.y - 28;
+    ctx.save();
+    ctx.globalAlpha = 0.3 + Math.sin(Date.now() / 300) * 0.1;
+    ctx.strokeStyle = '#3498db';
+    ctx.lineWidth = 2;
+    ctx.shadowColor = '#3498db';
+    ctx.shadowBlur = 10;
+    ctx.beginPath();
+    ctx.arc(sx, sy, 28, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+};
+
+// ============================================================
+// 23. WEATHER EFFECTS (per-world atmosphere)
+// ============================================================
+const WeatherSystem = {
+  particles: [],
+  type: 'none',
+  init(theme) {
+    this.particles = [];
+    if (theme === 'ice') this.type = 'snow';
+    else if (theme === 'volcano') this.type = 'ash';
+    else if (theme === 'ocean') this.type = 'bubbles';
+    else if (theme === 'dark') this.type = 'fireflies';
+    else if (theme === 'neon') this.type = 'glitch';
+    else if (theme === 'forest') this.type = 'leaves';
+    else if (theme === 'desert') this.type = 'sand';
+    else this.type = 'none';
+    // Pre-populate
+    for (let i = 0; i < 40; i++) {
+      this.particles.push(this.createParticle());
+    }
+  },
+  createParticle() {
+    return {
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      vx: (Math.random() - 0.5) * 1,
+      vy: Math.random() * 2 + 0.5,
+      size: 1 + Math.random() * 3,
+      alpha: 0.2 + Math.random() * 0.4,
+      life: 1
+    };
+  },
+  update() {
+    if (this.type === 'none' || !gameSettings.particles) return;
+    for (let i = this.particles.length - 1; i >= 0; i--) {
+      const p = this.particles[i];
+      if (this.type === 'snow') { p.x += Math.sin(Date.now() / 1000 + p.y) * 0.3; p.vy = 1; }
+      else if (this.type === 'ash') { p.vy = 0.8; p.vx = Math.sin(Date.now() / 500 + p.x) * 0.5; }
+      else if (this.type === 'bubbles') { p.vy = -1; p.vx = Math.sin(Date.now() / 800 + p.y) * 0.3; }
+      else if (this.type === 'fireflies') { p.vx = Math.sin(Date.now() / 600 + p.x) * 0.8; p.vy = Math.cos(Date.now() / 700 + p.y) * 0.8; }
+      else if (this.type === 'sand') { p.vx = 2; p.vy = 0.3; }
+      else if (this.type === 'leaves') { p.vx = 0.5; p.vy = Math.sin(Date.now() / 400 + p.x) * 0.5 + 0.5; }
+      p.x += p.vx;
+      p.y += p.vy;
+      if (p.y > canvas.height || p.y < 0 || p.x > canvas.width || p.x < 0) {
+        this.particles[i] = this.createParticle();
+        if (this.type === 'bubbles') this.particles[i].y = canvas.height;
+        if (this.type === 'sand') this.particles[i].x = 0;
+      }
+    }
+  },
+  draw(ctx) {
+    if (this.type === 'none' || !gameSettings.particles) return;
+    ctx.save();
+    for (const p of this.particles) {
+      ctx.globalAlpha = p.alpha;
+      if (this.type === 'snow') { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill(); }
+      else if (this.type === 'ash') { ctx.fillStyle = '#8b4513'; ctx.fillRect(p.x, p.y, p.size, p.size * 0.5); }
+      else if (this.type === 'bubbles') { ctx.strokeStyle = 'rgba(100,200,255,0.4)'; ctx.lineWidth = 0.5; ctx.beginPath(); ctx.arc(p.x, p.y, p.size + 1, 0, Math.PI * 2); ctx.stroke(); }
+      else if (this.type === 'fireflies') { ctx.fillStyle = '#7fff00'; ctx.shadowColor = '#7fff00'; ctx.shadowBlur = 6; ctx.beginPath(); ctx.arc(p.x, p.y, p.size * 0.5, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0; }
+      else if (this.type === 'glitch') { ctx.fillStyle = Math.random() > 0.5 ? '#ff00ff' : '#00ffff'; ctx.fillRect(p.x, p.y, p.size * 3, 1); }
+      else if (this.type === 'sand') { ctx.fillStyle = 'rgba(210,180,100,0.4)'; ctx.fillRect(p.x, p.y, p.size * 2, 1); }
+      else if (this.type === 'leaves') { ctx.fillStyle = '#4a7c3f'; ctx.beginPath(); ctx.ellipse(p.x, p.y, p.size, p.size * 0.5, Date.now() / 500 + p.x, 0, Math.PI * 2); ctx.fill(); }
+    }
+    ctx.restore();
+  }
+};
+
+// ============================================================
+// 24. SCORE MULTIPLIER DISPLAY (HUD enhancement)
+// ============================================================
+const HUDEnhanced = {
+  draw(ctx) {
+    // Combo display
+    ComboSystem.draw(ctx);
+    // Shield indicator
+    ShieldSystem.draw(ctx);
+    // Daily challenge progress
+    if (DailyChallenge.todayChallenge && !DailyChallenge.completed) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.fillRect(canvas.width - 200, 60, 190, 28);
+      ctx.strokeStyle = 'rgba(200,160,60,0.3)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(canvas.width - 200, 60, 190, 28);
+      ctx.fillStyle = '#c8c0d8';
+      ctx.font = '9px "Trebuchet MS"';
+      ctx.textAlign = 'left';
+      ctx.fillText('\ud83c\udf1f ' + DailyChallenge.todayChallenge.desc, canvas.width - 194, 73);
+      // Progress bar
+      const prog = Math.min(DailyChallenge.progress / DailyChallenge.todayChallenge.target, 1);
+      ctx.fillStyle = 'rgba(40,30,60,0.6)';
+      ctx.fillRect(canvas.width - 194, 78, 178, 5);
+      ctx.fillStyle = '#ffd700';
+      ctx.fillRect(canvas.width - 194, 78, 178 * prog, 5);
+      ctx.restore();
+    }
+    // FPS counter
+    if (gameSettings.showFps) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.fillRect(canvas.width - 50, 40, 44, 16);
+      ctx.fillStyle = '#4eff4e';
+      ctx.font = '10px monospace';
+      ctx.textAlign = 'right';
+      ctx.fillText(Math.round(FPSCounter.fps) + ' FPS', canvas.width - 10, 52);
+      ctx.restore();
+    }
+  }
+};
+
+// ============================================================
+// 25. FPS COUNTER
+// ============================================================
+const FPSCounter = {
+  fps: 60,
+  frames: 0,
+  lastTime: Date.now(),
+  update() {
+    this.frames++;
+    const now = Date.now();
+    if (now - this.lastTime >= 1000) {
+      this.fps = this.frames;
+      this.frames = 0;
+      this.lastTime = now;
+    }
+  }
+};
+
+// ============================================================
+// 26. DEATH COUNTER & RESPAWN ANIMATION
+// ============================================================
+const DeathAnimation = {
+  active: false,
+  timer: 0,
+  x: 0, y: 0,
+  trigger(x, y) {
+    this.active = true;
+    this.timer = 40;
+    this.x = x; this.y = y;
+  },
+  update() {
+    if (this.active) { this.timer--; if (this.timer <= 0) this.active = false; }
+  },
+  draw(ctx) {
+    if (!this.active) return;
+    const progress = 1 - this.timer / 40;
+    const sx = this.x - gameState.camera.x;
+    const sy = this.y - gameState.camera.y;
+    ctx.save();
+    ctx.globalAlpha = 1 - progress;
+    // Expanding ring
+    ctx.strokeStyle = '#ff3333';
+    ctx.lineWidth = 3 - progress * 3;
+    ctx.beginPath();
+    ctx.arc(sx, sy, progress * 60, 0, Math.PI * 2);
+    ctx.stroke();
+    // Skull emoji
+    ctx.font = (20 + progress * 20) + 'px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('\ud83d\udc80', sx, sy - progress * 30);
+    ctx.restore();
+  }
+};
+
+// ============================================================
+// 27. TRAIL EFFECT (player movement trail)
+// ============================================================
+const TrailEffect = {
+  points: [],
+  maxPoints: 8,
+  update() {
+    if (!player || !gameState.running) return;
+    if (Math.abs(player.vx) > 1 || Math.abs(player.vy) > 2) {
+      this.points.push({ x: player.x, y: player.y - 28, alpha: 1 });
+      if (this.points.length > this.maxPoints) this.points.shift();
+    }
+    for (let i = this.points.length - 1; i >= 0; i--) {
+      this.points[i].alpha -= 0.12;
+      if (this.points[i].alpha <= 0) this.points.splice(i, 1);
+    }
+  },
+  draw(ctx) {
+    if (!player || player.isPowered === false && !ShopSystem.purchased.speed2) return;
+    const skin = SkinSystem.getActive();
+    for (const p of this.points) {
+      const sx = p.x - gameState.camera.x;
+      const sy = p.y - gameState.camera.y;
+      ctx.save();
+      ctx.globalAlpha = p.alpha * 0.3;
+      ctx.fillStyle = skin.staffColor || '#9b59b6';
+      ctx.beginPath();
+      ctx.arc(sx, sy, 8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+};
+
+// ============================================================
+// 28. LEVEL TIMER WARNING (flash when low time)
+// ============================================================
+const TimerWarning = {
+  draw(ctx) {
+    if (!gameState.running || gameState.time > 30) return;
+    const flash = Math.sin(Date.now() / 200) > 0;
+    if (flash && gameState.time <= 10) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(255,0,0,0.1)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.restore();
+    }
+    // Time text pulse
+    const timeEl = document.getElementById('time');
+    if (gameState.time <= 10) timeEl.style.color = '#ff3333';
+    else if (gameState.time <= 30) timeEl.style.color = '#ff8800';
+    else timeEl.style.color = '#ffe066';
+  }
+};
+
+// ============================================================
+// 29. COIN PICKUP ANIMATION (arc toward HUD)
+// ============================================================
+const CoinArcSystem = {
+  arcs: [],
+  spawn(x, y) {
+    this.arcs.push({
+      x: x - gameState.camera.x,
+      y: y - gameState.camera.y,
+      targetX: 120,
+      targetY: 52,
+      progress: 0,
+      startX: x - gameState.camera.x,
+      startY: y - gameState.camera.y
+    });
+  },
+  update() {
+    for (let i = this.arcs.length - 1; i >= 0; i--) {
+      const a = this.arcs[i];
+      a.progress += 0.05;
+      if (a.progress >= 1) { this.arcs.splice(i, 1); continue; }
+      const t = a.progress;
+      a.x = a.startX + (a.targetX - a.startX) * t;
+      a.y = a.startY + (a.targetY - a.startY) * t - Math.sin(t * Math.PI) * 50;
+    }
+  },
+  draw(ctx) {
+    for (const a of this.arcs) {
+      ctx.save();
+      ctx.globalAlpha = 1 - a.progress;
+      ctx.fillStyle = '#00e5ff';
+      ctx.shadowColor = '#00ffff';
+      ctx.shadowBlur = 6;
+      ctx.beginPath();
+      ctx.moveTo(a.x, a.y - 4);
+      ctx.lineTo(a.x + 3, a.y);
+      ctx.lineTo(a.x, a.y + 4);
+      ctx.lineTo(a.x - 3, a.y);
+      ctx.closePath();
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.restore();
+    }
+  }
+};
+
+// ============================================================
+// 30. PAUSE SCREEN ENHANCEMENT
+// ============================================================
+const PauseOverlay = {
+  draw(ctx) {
+    if (!gameState.paused) return;
+    // Dim + blur effect
+    ctx.save();
+    ctx.fillStyle = 'rgba(5,3,15,0.6)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Animated border
+    const t = Date.now() / 1000;
+    ctx.strokeStyle = 'rgba(200,160,60,' + (0.3 + Math.sin(t) * 0.1) + ')';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
+    ctx.restore();
+  }
+};
+
+// ============================================================
+// 31. ENHANCED GAME LOOP (integrate all new systems)
+// ============================================================
+// Override the patched draw with full system
+const _finalDraw = patchedDraw;
+patchedDraw = function() {
+  const shake = ScreenShake.getOffset();
+  if (shake.x || shake.y) { ctx.save(); ctx.translate(shake.x, shake.y); }
+
+  _oldDraw();
+  TrailEffect.draw(ctx);
+  SpellSystem.draw(ctx);
+  WeatherSystem.draw(ctx);
+  DeathAnimation.draw(ctx);
+  CoinArcSystem.draw(ctx);
+  FloatingText.draw(ctx);
+  HUDEnhanced.draw(ctx);
+  NotificationSystem.draw(ctx);
+  TimerWarning.draw(ctx);
+  PauseOverlay.draw(ctx);
+
+  // XP bar at bottom
+  const xpProgress = PlayerProgression.getProgress();
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.fillRect(10, canvas.height - 18, 100, 5);
+  ctx.fillStyle = '#7c3aed';
+  ctx.fillRect(10, canvas.height - 18, xpProgress * 100, 5);
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.font = '8px "Trebuchet MS"';
+  ctx.textAlign = 'left';
+  ctx.fillText('Lv.' + PlayerProgression.level, 10, canvas.height - 22);
+
+  if (shake.x || shake.y) ctx.restore();
+};
+
+// Override the patched update with full system
+const _finalUpdate = patchedUpdate;
+patchedUpdate = function() {
+  ComboSystem.update();
+  SpellSystem.update();
+  FloatingText.update();
+  NotificationSystem.update();
+  ScreenShake.update();
+  MagnetEffect.update();
+  StatsTracker.update();
+  WeatherSystem.update();
+  DeathAnimation.update();
+  TrailEffect.update();
+  CoinArcSystem.update();
+  FPSCounter.update();
+  if (Date.now() % 3000 < 50) AchievementSystem.check();
+};
+
+// Hook death animation into player die
+const _finalDie = WizardPlayer.prototype.die;
+WizardPlayer.prototype.die = function() {
+  DeathAnimation.trigger(this.x, this.y);
+  StatsTracker.levelDeaths++;
+  StatsTracker.totalDeaths++;
+  ScreenShake.shake(6, 15);
+  // Check shield
+  if (ShieldSystem.absorb()) {
+    this.invincible = true;
+    this.invincibleTimer = 60;
+    return; // Shield saved the player!
+  }
+  SoundFX.hit();
+  particles.emit(this.x, this.y, 'death', 20);
+  gameState.lives--;
+  document.getElementById('lives').textContent = gameState.lives;
+  if (gameState.lives <= 0) gameOver();
+  else this.respawn();
+};
+
+// Hook crystal collection for arc animation
+const _finalCollisionHandler = handleCollisions;
+handleCollisions = function() {
+  const prevCoins = gameState.coins;
+  _finalCollisionHandler();
+  const newCoins = gameState.coins - prevCoins;
+  if (newCoins > 0) {
+    ComboSystem.add();
+    PlayerProgression.addXP(5 * newCoins);
+    DailyChallenge.addProgress('collect', newCoins);
+    CoinArcSystem.spawn(player.x, player.y - 30);
+  }
+};
+
+// Hook startLevel for weather init and shield
+const _finalStartLevel = startLevel;
+startLevel = function(levelNum) {
+  _finalStartLevel(levelNum);
+  const config = LEVELS[levelNum] || LEVELS[1];
+  WeatherSystem.init(config.theme);
+  ShieldSystem.activate();
+  TrailEffect.points = [];
+  DeathAnimation.active = false;
+  CoinArcSystem.arcs = [];
+};
+
+// ============================================================
+// 32. WORLD COMPLETION BONUS REWARDS
+// ============================================================
+const WorldCompletionBonus = {
+  awarded: {},
+  check() {
+    for (let w = 0; w < 10; w++) {
+      const lastLevel = (w + 1) * 10;
+      if (gameState.maxUnlockedLevel > lastLevel && !this.awarded[w]) {
+        this.awarded[w] = true;
+        const bonus = (w + 1) * 50;
+        gameState.totalCrystals += bonus;
+        NotificationSystem.show('\ud83c\udf1f World ' + (w + 1) + ' Complete! +' + bonus + ' crystals!', '#ffd700');
+        PlayerProgression.addXP(500);
+      }
+    }
+  }
+};
+
+// ============================================================
+// 33. TUTORIAL SYSTEM (first time players)
+// ============================================================
+const TutorialSystem = {
+  shown: false,
+  tips: [
+    { trigger: 'start', text: '\u2190\u2192 to move, SPACE to jump!', duration: 240 },
+    { trigger: 'firstCrystal', text: '\ud83d\udc8e Collect crystals for score!', duration: 180 },
+    { trigger: 'firstEnemy', text: '\u26a0 Jump ON enemies or press X to cast spells!', duration: 240 },
+    { trigger: 'firstHouse', text: '\u2b07 Press DOWN near houses for bonuses!', duration: 200 }
+  ],
+  currentTip: null,
+  timer: 0,
+  triggered: {},
+  show(trigger) {
+    if (this.triggered[trigger] || this.currentTip) return;
+    const tip = this.tips.find(t => t.trigger === trigger);
+    if (!tip) return;
+    this.triggered[trigger] = true;
+    this.currentTip = tip;
+    this.timer = tip.duration;
+  },
+  update() {
+    if (this.currentTip) {
+      this.timer--;
+      if (this.timer <= 0) this.currentTip = null;
+    }
+  },
+  draw(ctx) {
+    if (!this.currentTip) return;
+    const alpha = Math.min(1, this.timer / 30);
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    const text = this.currentTip.text;
+    ctx.font = 'bold 14px "Trebuchet MS"';
+    const tw = ctx.measureText(text).width;
+    ctx.fillRect(canvas.width / 2 - tw / 2 - 16, canvas.height - 70, tw + 32, 30);
+    ctx.strokeStyle = 'rgba(200,160,60,0.5)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(canvas.width / 2 - tw / 2 - 16, canvas.height - 70, tw + 32, 30);
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'center';
+    ctx.fillText(text, canvas.width / 2, canvas.height - 51);
+    ctx.restore();
+  }
+};
+
+// ============================================================
+// 34. MINIMAP (top-right corner)
+// ============================================================
+const Minimap = {
+  draw(ctx) {
+    if (!gameState.running || gameState.paused) return;
+    const mmW = 80, mmH = 20;
+    const mmX = canvas.width - mmW - 10, mmY = canvas.height - mmH - 30;
+    ctx.save();
+    ctx.globalAlpha = 0.6;
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fillRect(mmX, mmY, mmW, mmH);
+    ctx.strokeStyle = 'rgba(200,160,60,0.3)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(mmX, mmY, mmW, mmH);
+    // Player dot
+    const playerRatio = player.x / levelWidth;
+    ctx.fillStyle = '#ffd700';
+    ctx.fillRect(mmX + playerRatio * mmW - 1, mmY + mmH / 2 - 2, 3, 4);
+    // Flag/end dot
+    ctx.fillStyle = '#ff3333';
+    ctx.fillRect(mmX + mmW - 4, mmY + mmH / 2 - 2, 3, 4);
+    // Viewport indicator
+    const vpStart = gameState.camera.x / levelWidth;
+    const vpWidth = canvas.width / levelWidth;
+    ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+    ctx.strokeRect(mmX + vpStart * mmW, mmY, vpWidth * mmW, mmH);
+    ctx.restore();
+  }
+};
+
+// Add minimap to draw
+const _finalDraw2 = patchedDraw;
+patchedDraw = function() {
+  _finalDraw2();
+  Minimap.draw(ctx);
+  TutorialSystem.draw(ctx);
+};
+
+// Add tutorial and world bonus to update
+const _finalUpdate2 = patchedUpdate;
+patchedUpdate = function() {
+  _finalUpdate2();
+  TutorialSystem.update();
+  if (gameState.levelsCompleted > 0) WorldCompletionBonus.check();
+};
+
+// Show tutorial on first level start
+const _tutStartLevel = startLevel;
+startLevel = function(levelNum) {
+  _tutStartLevel(levelNum);
+  if (levelNum === 1) TutorialSystem.show('start');
+};
+
+</script>
+</body>
+</html>
+
